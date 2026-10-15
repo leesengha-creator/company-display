@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>사내 디지털 사이니지</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    html, body {
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      background-color: #000000;
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Malgun Gothic", "Pretendard", sans-serif;
+    }
+
+    body.hide-cursor {
+      cursor: none;
+    }
+
+    #container {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .media-item {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      opacity: 0;
+      transition: opacity 0.5s ease-in-out;
+      background-color: #000000;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: high-quality;
+    }
+
+    .media-item.active {
+      opacity: 1;
+      z-index: 10;
+    }
+
+    #overlay-header {
+      position: absolute;
+      top: 24px;
+      left: 32px;
+      right: 32px;
+      z-index: 100;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      pointer-events: none;
+      color: rgba(255, 255, 255, 0.88);
+      text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
+      transition: transform 1s ease;
+    }
+
+    #logo-container {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+    }
+
+    #clock-container {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+    }
+
+    #digital-clock {
+      font-size: 38px;
+      font-weight: 700;
+      line-height: 1.1;
+      font-variant-numeric: tabular-nums;
+      letter-spacing: 0.5px;
+    }
+
+    #date-display {
+      font-size: 16px;
+      font-weight: 400;
+      color: rgba(255, 255, 255, 0.72);
+      margin-top: 4px;
+    }
+
+    #progress-bar-container {
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 4px;
+      background-color: rgba(255, 255, 255, 0.1);
+      z-index: 100;
+      pointer-events: none;
+    }
+
+    #progress-bar {
+      width: 0%;
+      height: 100%;
+      background-color: #3b82f6;
+      transition: width 0.1s linear;
+    }
+
+    #fullscreen-hint {
+      position: absolute;
+      bottom: 24px;
+      right: 24px;
+      z-index: 1000;
+      background: rgba(0, 0, 0, 0.75);
+      color: #fff;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-size: 14px;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      pointer-events: auto;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      transition: opacity 1s;
+    }
+  </style>
+</head>
+<body>
+
+  <div id="container">
+    <img id="image-layer-a" class="media-item" alt="공지 이미지">
+    <img id="image-layer-b" class="media-item" alt="공지 이미지">
+    <video id="video-player" class="media-item" muted playsinline preload="auto"></video>
+
+    <div id="overlay-header">
+      <div id="logo-container">🏢 사내 공지 게시판 (테스트 모드)</div>
+      <div id="clock-container">
+        <div id="digital-clock">00:00</div>
+        <div id="date-display">2026.00.00 (월)</div>
+      </div>
+    </div>
+
+    <div id="progress-bar-container">
+      <div id="progress-bar"></div>
+    </div>
+
+    <div id="fullscreen-hint" onclick="toggleFullScreen()">
+      ⛶ 화면을 더블클릭하면 전체화면이 됩니다
+    </div>
+  </div>
+
+  <script>
+    const CONFIG = {
+      imageDuration: 3000,   // 사진 3초
+      showClock: true,
+      showProgressBar: true,
+      autoReloadMinutes: 60, // 1시간마다 자동 새로고침
+    };
+
+    // 보안 때문에 파일 업로드가 안 되므로, 인터넷 공개 고화질 테스트 사진/동영상 URL 사용
+    const PLAYLIST = [
+      { type: 'image', src: 'https://picsum.photos/id/1018/1920/1080' }, // 테스트 사진 1 (산)
+      { type: 'image', src: 'https://picsum.photos/id/1015/1920/1080' }, // 테스트 사진 2 (강)
+      { type: 'image', src: 'https://picsum.photos/id/1019/1920/1080' }, // 테스트 사진 3 (바다)
+      { type: 'image', src: 'https://picsum.photos/id/1016/1920/1080' }, // 테스트 사진 4 (숲)
+      { type: 'video', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' }, // 테스트 영상
+      { type: 'image', src: 'https://picsum.photos/id/1025/1920/1080' }  // 테스트 사진 5 (퍼피)
+    ];
+
+    let currentIndex = 0;
+    let timerId = null;
+    let progressTimer = null;
+    let activeImageLayer = 'A';
+
+    const imgLayerA = document.getElementById('image-layer-a');
+    const imgLayerB = document.getElementById('image-layer-b');
+    const videoPlayer = document.getElementById('video-player');
+    const progressBar = document.getElementById('progress-bar');
+
+    function updateClock() {
+      const now = new Date();
+      const hours = String(now.getHours()).padStart(2, '0');
+      const minutes = String(now.getMinutes()).padStart(2, '0');
+      document.getElementById('digital-clock').textContent = `${hours}:${minutes}`;
+
+      const days = ['일', '월', '화', '수', '목', '금', '토'];
+      const year = now.getFullYear();
+      const month = String(now.getMonth() + 1).padStart(2, '0');
+      const date = String(now.getDate()).padStart(2, '0');
+      const dayName = days[now.getDay()];
+      document.getElementById('date-display').textContent = `${year}.${month}.${date} (${dayName})`;
+    }
+    setInterval(updateClock, 1000);
+    updateClock();
+
+    // OLED 번인 방지 픽셀 시프트
+    setInterval(() => {
+      const header = document.getElementById('overlay-header');
+      const offsetX = Math.floor(Math.random() * 7) - 3;
+      const offsetY = Math.floor(Math.random() * 7) - 3;
+      header.style.transform = `translate(${offsetX}px, ${offsetY}px)`;
+    }, 10 * 60 * 1000);
+
+    function startProgressBar(durationMs) {
+      if (!CONFIG.showProgressBar) return;
+      clearInterval(progressTimer);
+      const startTime = Date.now();
+      progressBar.style.width = '0%';
+
+      progressTimer = setInterval(() => {
+        const elapsed = Date.now() - startTime;
+        const percent = Math.min((elapsed / durationMs) * 100, 100);
+        progressBar.style.width = `${percent}%`;
+        if (percent >= 100) clearInterval(progressTimer);
+      }, 50);
+    }
+
+    function nextItem() {
+      currentIndex = (currentIndex + 1) % PLAYLIST.length;
+      playCurrentItem();
+    }
+
+    function playCurrentItem() {
+      clearTimeout(timerId);
+      clearInterval(progressTimer);
+
+      const item = PLAYLIST[currentIndex];
+      if (item.type === 'video') {
+        playVideo(item.src);
+      } else {
+        showImage(item.src);
+      }
+    }
+
+    function showImage(src) {
+      videoPlayer.pause();
+      videoPlayer.classList.remove('active');
+
+      const nextLayer = (activeImageLayer === 'A') ? imgLayerB : imgLayerA;
+      const currentLayer = (activeImageLayer === 'A') ? imgLayerA : imgLayerB;
+
+      nextLayer.src = src;
+      nextLayer.onload = () => {
+        nextLayer.classList.add('active');
+        currentLayer.classList.remove('active');
+        activeImageLayer = (activeImageLayer === 'A') ? 'B' : 'A';
+
+        startProgressBar(CONFIG.imageDuration);
+        timerId = setTimeout(nextItem, CONFIG.imageDuration);
+      };
+
+      nextLayer.onerror = () => {
+        timerId = setTimeout(nextItem, 1500);
+      };
+    }
+
+    function playVideo(src) {
+      imgLayerA.classList.remove('active');
+      imgLayerB.classList.remove('active');
+
+      videoPlayer.src = src;
+      videoPlayer.classList.add('active');
+      progressBar.style.width = '0%';
+
+      const playPromise = videoPlayer.play();
+      if (playPromise !== undefined) {
+        playPromise.catch(() => {
+          timerId = setTimeout(nextItem, 2000);
+        });
+      }
+
+      videoPlayer.onended = () => nextItem();
+      videoPlayer.onerror = () => timerId = setTimeout(nextItem, 2000);
+    }
+
+    let mouseTimer = null;
+    window.addEventListener('mousemove', () => {
+      document.body.classList.remove('hide-cursor');
+      clearTimeout(mouseTimer);
+      mouseTimer = setTimeout(() => {
+        document.body.classList.add('hide-cursor');
+      }, 3000);
+    });
+
+    function toggleFullScreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        if (document.exitFullscreen) document.exitFullscreen();
+      }
+    }
+    window.addEventListener('dblclick', toggleFullScreen);
+
+    setTimeout(() => {
+      const hint = document.getElementById('fullscreen-hint');
+      if (hint) {
+        hint.style.opacity = '0';
+        setTimeout(() => hint.remove(), 1000);
+      }
+    }, 8000);
+
+    if (CONFIG.autoReloadMinutes > 0) {
+      setInterval(() => location.reload(true), CONFIG.autoReloadMinutes * 60 * 1000);
+    }
+
+    window.onload = () => playCurrentItem();
+  </script>
+</body>
+</html>
