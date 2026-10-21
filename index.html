@@ -5,6 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>사내 디지털 사이니지</title>
   <style>
+    /* OLED 패널 최적화: 완벽한 블랙(#000) 배경으로 전력 절감 및 레터박스 일체화 */
     * {
       margin: 0;
       padding: 0;
@@ -34,6 +35,7 @@
       align-items: center;
     }
 
+    /* 사진 렌더러: 무보정 고화질 원본 비율 유지 */
     .media-item {
       position: absolute;
       top: 0;
@@ -53,6 +55,7 @@
       z-index: 10;
     }
 
+    /* 상단 정보바 (로고/문구, 시계, 날짜) */
     #overlay-header {
       position: absolute;
       top: 24px;
@@ -96,6 +99,7 @@
       margin-top: 4px;
     }
 
+    /* 하단 진행 상태 바 (3초 표시) */
     #progress-bar-container {
       position: absolute;
       bottom: 0;
@@ -139,10 +143,9 @@
   <div id="container">
     <img id="image-layer-a" class="media-item" alt="공지 이미지">
     <img id="image-layer-b" class="media-item" alt="공지 이미지">
-    <video id="video-player" class="media-item" muted playsinline preload="auto"></video>
 
     <div id="overlay-header">
-      <div id="logo-container">🏢 사내 공지 게시판 (테스트 모드)</div>
+      <div id="logo-container">🏢 사내 공지 게시판</div>
       <div id="clock-container">
         <div id="digital-clock">00:00</div>
         <div id="date-display">2026.00.00 (월)</div>
@@ -160,20 +163,18 @@
 
   <script>
     const CONFIG = {
-      imageDuration: 3000,   // 사진 3초
+      imageDuration: 3000,   // 사진 3초 전환
       showClock: true,
       showProgressBar: true,
-      autoReloadMinutes: 60, // 1시간마다 자동 새로고침
+      autoReloadMinutes: 30, // 30분마다 자동 새로고침 (새 사진 반영 & 메모리 청소)
     };
 
-    // 보안 때문에 파일 업로드가 안 되므로, 인터넷 공개 고화질 테스트 사진/동영상 URL 사용
+    // 현재 등록된 사진 목록
     const PLAYLIST = [
-      { type: 'image', src: 'https://picsum.photos/id/1018/1920/1080' }, // 테스트 사진 1 (산)
-      { type: 'image', src: 'https://picsum.photos/id/1015/1920/1080' }, // 테스트 사진 2 (강)
-      { type: 'image', src: 'https://picsum.photos/id/1019/1920/1080' }, // 테스트 사진 3 (바다)
-      { type: 'image', src: 'https://picsum.photos/id/1016/1920/1080' }, // 테스트 사진 4 (숲)
-      { type: 'video', src: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4' }, // 테스트 영상
-      { type: 'image', src: 'https://picsum.photos/id/1025/1920/1080' }  // 테스트 사진 5 (퍼피)
+      { type: 'image', src: 'media/slide_01.jpg' },
+      { type: 'image', src: 'media/slide_02.jpg' },
+      { type: 'image', src: 'media/slide_03.jpg' },
+      { type: 'image', src: 'media/slide_04.jpg' }
     ];
 
     let currentIndex = 0;
@@ -183,7 +184,6 @@
 
     const imgLayerA = document.getElementById('image-layer-a');
     const imgLayerB = document.getElementById('image-layer-b');
-    const videoPlayer = document.getElementById('video-player');
     const progressBar = document.getElementById('progress-bar');
 
     function updateClock() {
@@ -202,7 +202,7 @@
     setInterval(updateClock, 1000);
     updateClock();
 
-    // OLED 번인 방지 픽셀 시프트
+    // OLED 번인 방지 미세 픽셀 시프트 (10분마다)
     setInterval(() => {
       const header = document.getElementById('overlay-header');
       const offsetX = Math.floor(Math.random() * 7) - 3;
@@ -233,18 +233,12 @@
       clearTimeout(timerId);
       clearInterval(progressTimer);
 
+      if (!PLAYLIST || PLAYLIST.length === 0) return;
       const item = PLAYLIST[currentIndex];
-      if (item.type === 'video') {
-        playVideo(item.src);
-      } else {
-        showImage(item.src);
-      }
+      showImage(item.src);
     }
 
     function showImage(src) {
-      videoPlayer.pause();
-      videoPlayer.classList.remove('active');
-
       const nextLayer = (activeImageLayer === 'A') ? imgLayerB : imgLayerA;
       const currentLayer = (activeImageLayer === 'A') ? imgLayerA : imgLayerB;
 
@@ -263,25 +257,7 @@
       };
     }
 
-    function playVideo(src) {
-      imgLayerA.classList.remove('active');
-      imgLayerB.classList.remove('active');
-
-      videoPlayer.src = src;
-      videoPlayer.classList.add('active');
-      progressBar.style.width = '0%';
-
-      const playPromise = videoPlayer.play();
-      if (playPromise !== undefined) {
-        playPromise.catch(() => {
-          timerId = setTimeout(nextItem, 2000);
-        });
-      }
-
-      videoPlayer.onended = () => nextItem();
-      videoPlayer.onerror = () => timerId = setTimeout(nextItem, 2000);
-    }
-
+    // 마우스 3초 무반응 시 커서 숨김
     let mouseTimer = null;
     window.addEventListener('mousemove', () => {
       document.body.classList.remove('hide-cursor');
@@ -308,6 +284,7 @@
       }
     }, 8000);
 
+    // 자동 새로고침 (새 사진 반영)
     if (CONFIG.autoReloadMinutes > 0) {
       setInterval(() => location.reload(true), CONFIG.autoReloadMinutes * 60 * 1000);
     }
