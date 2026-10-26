@@ -147,9 +147,8 @@
     <img id="image-layer-a" class="media-item" alt="공지 이미지">
     <img id="image-layer-b" class="media-item" alt="공지 이미지">
 
-    <!-- LG TV 스크린세이버 방지용 더미 버튼 & 실제 MP4 비디오 루프 -->
-    <button id="remote-dummy-btn" style="position:fixed;top:-100px;left:-100px;opacity:0;pointer-events:none;" tabindex="-1"></button>
-    <video id="keep-alive-video" src="media/keepalive.mp4" autoplay loop muted playsinline style="position:fixed;bottom:0;right:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1;"></video>
+    <!-- LG TV 스크린세이버 방지용 히든 엘리먼트 -->
+    <div id="keepalive-box" style="position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:9999;"></div>
 
     <div id="overlay-header">
       <div id="logo-container">🏢 사내 공지 게시판</div>
@@ -178,13 +177,13 @@
 
     // 현재 등록된 사진 목록
     const PLAYLIST = [
-      { type: 'image', src: 'media/slide_01.jpg?v=1792988165' },
-      { type: 'image', src: 'media/slide_02.jpg?v=1792988165' },
-      { type: 'image', src: 'media/slide_03.jpg?v=1792988165' },
-      { type: 'image', src: 'media/slide_04.jpg?v=1792988165' },
-      { type: 'image', src: 'media/slide_05.jpg?v=1792988165' },
-      { type: 'image', src: 'media/slide_06.jpg?v=1792988165' },
-      { type: 'image', src: 'media/slide_07.jpg?v=1792988165' }
+      { type: 'image', src: 'media/slide_01.jpg?v=1792990572' },
+      { type: 'image', src: 'media/slide_02.jpg?v=1792990572' },
+      { type: 'image', src: 'media/slide_03.jpg?v=1792990572' },
+      { type: 'image', src: 'media/slide_04.jpg?v=1792990572' },
+      { type: 'image', src: 'media/slide_05.jpg?v=1792990572' },
+      { type: 'image', src: 'media/slide_06.jpg?v=1792990572' },
+      { type: 'image', src: 'media/slide_07.jpg?v=1792990572' }
     ];
 
     let currentIndex = 0;
@@ -302,72 +301,60 @@
     }
 
     // =========================================================================
-    // [LG TV 물리 리모컨 버튼 자동 누름 에뮬레이터 (60초 주기)]
+    // [LG TV 리모컨 신호 & 화면 유지 에뮬레이터 (무해한 신호 45초 주기)]
     // =========================================================================
 
+    // 1. 무음 오디오 핑 (TV OS에 미디어 활성 상태 전달)
+    function playSilentAudioPing() {
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx) {
+          const ctx = new AudioCtx();
+          const osc = ctx.createOscillator();
+          const gain = ctx.createGain();
+          gain.gain.value = 0.0001; // 들리지 않는 무음
+          osc.connect(gain);
+          gain.connect(ctx.destination);
+          osc.start();
+          osc.stop(ctx.currentTime + 0.1);
+        }
+      } catch (e) {}
+    }
+
+    // 2. 가상 물리 입력 신호 발생 (페이지 이동을 유발하지 않는 무해한 키만 전송)
     function simulateRemoteButtonPress() {
-      // 1. 투명 버튼 강제 포커스 & 클릭 (webOS 인터랙션 이벤트 강제 트리거)
-      const btn = document.getElementById('remote-dummy-btn');
-      if (btn) {
-        try {
-          btn.focus();
-          btn.click();
-          btn.blur();
-        } catch (e) {}
-      }
-
-      // 2. webOS 리모컨 물리 방향키/확인키 신호 전송
-      const remoteKeys = [
-        { key: 'ArrowRight', keyCode: 39, code: 'ArrowRight' },
-        { key: 'ArrowLeft',  keyCode: 37, code: 'ArrowLeft' },
-        { key: 'Enter',       keyCode: 13, code: 'Enter' },
-        { key: 'Shift',       keyCode: 16, code: 'ShiftRight' }
-      ];
-      const target = remoteKeys[Math.floor(Math.random() * remoteKeys.length)];
-
-      ['keydown', 'keypress', 'keyup'].forEach(evtType => {
+      // 무해한 Shift / Alt 키 신호만 전송 (Enter, Arrow 등 페이지 이동 키 배제)
+      ['keydown', 'keyup'].forEach(evtType => {
         try {
           const ev = new KeyboardEvent(evtType, {
-            key: target.key,
-            code: target.code,
-            keyCode: target.keyCode,
-            which: target.keyCode,
+            key: 'Shift',
+            code: 'ShiftRight',
+            keyCode: 16,
+            which: 16,
             bubbles: true,
-            cancelable: true,
-            composed: true
+            cancelable: true
           });
           window.dispatchEvent(ev);
           document.dispatchEvent(ev);
-          if (document.body) document.body.dispatchEvent(ev);
         } catch (e) {}
       });
 
-      // 3. 마우스 물리 이동 신호 발생
+      // 마우스 미세 이동 신호
       try {
         const mouseEv = new MouseEvent('mousemove', {
-          clientX: Math.floor(Math.random() * 50) + 10,
-          clientY: Math.floor(Math.random() * 50) + 10,
-          bubbles: true,
-          cancelable: true
+          clientX: Math.floor(Math.random() * 20) + 5,
+          clientY: Math.floor(Math.random() * 20) + 5,
+          bubbles: true
         });
         window.dispatchEvent(mouseEv);
       } catch (e) {}
 
-      // 4. 화면 미세 스크롤 핑 (TV 렌더러 웨이크업)
-      try {
-        window.scrollBy(0, 1);
-        window.scrollBy(0, -1);
-      } catch (e) {}
-
-      // 5. 백그라운드 MP4 재생 상태 유지
-      const kv = document.getElementById('keep-alive-video');
-      if (kv && kv.paused) {
-        kv.play().catch(() => {});
-      }
+      // 무음 오디오 핑
+      playSilentAudioPing();
     }
 
-    // 60초(1분)마다 리모컨 버튼 누름 시뮬레이션 자동 실행
-    setInterval(simulateRemoteButtonPress, 60000);
+    // 45초마다 리모컨 신호 전송
+    setInterval(simulateRemoteButtonPress, 45000);
 
     // Screen Wake Lock API
     async function requestScreenWakeLock() {
@@ -382,21 +369,18 @@
       if (document.visibilityState === 'visible') requestScreenWakeLock();
     });
 
-    // 화면 클릭/터치 시 비디오 및 웨이크락 확실히 언락
-    window.addEventListener('click', () => {
-      const kv = document.getElementById('keep-alive-video');
-      if (kv) kv.play().catch(() => {});
-      requestScreenWakeLock();
-      simulateRemoteButtonPress();
-    }, { once: false });
+    // 슬라이드쇼 정지 방지 워치독 (혹시 15초 이상 사진이 안 넘어가면 강제 복구)
+    setInterval(() => {
+      const currentActive = document.querySelector('.media-item.active');
+      if (!currentActive) {
+        playCurrentItem();
+      }
+    }, 15000);
 
     window.onload = () => {
       playCurrentItem();
       requestScreenWakeLock();
-      const kv = document.getElementById('keep-alive-video');
-      if (kv) kv.play().catch(() => {});
-      // 5초 후 첫 리모컨 누름 실행
-      setTimeout(simulateRemoteButtonPress, 5000);
+      setTimeout(simulateRemoteButtonPress, 3000);
     };
   </script>
 </body>
