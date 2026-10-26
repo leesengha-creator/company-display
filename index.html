@@ -188,19 +188,22 @@
 
     // 현재 등록된 사진 목록
     const PLAYLIST = [
-      { type: 'image', src: 'media/slide_01.jpg?v=1792992980' },
-      { type: 'image', src: 'media/slide_02.jpg?v=1792992980' },
-      { type: 'image', src: 'media/slide_03.jpg?v=1792992980' },
-      { type: 'image', src: 'media/slide_04.jpg?v=1792992980' },
-      { type: 'image', src: 'media/slide_05.jpg?v=1792992980' },
-      { type: 'image', src: 'media/slide_06.jpg?v=1792992980' },
-      { type: 'image', src: 'media/slide_07.jpg?v=1792992980' }
+      { type: 'image', src: 'media/slide_01.jpg?v=1792993483' },
+      { type: 'image', src: 'media/slide_02.jpg?v=1792993483' },
+      { type: 'image', src: 'media/slide_03.jpg?v=1792993483' },
+      { type: 'image', src: 'media/slide_04.jpg?v=1792993483' },
+      { type: 'image', src: 'media/slide_05.jpg?v=1792993483' },
+      { type: 'image', src: 'media/slide_06.jpg?v=1792993483' },
+      { type: 'image', src: 'media/slide_07.jpg?v=1792993483' }
     ];
 
     let currentIndex = 0;
     let timerId = null;
     let progressTimer = null;
     let activeImageLayer = 'A';
+    let isFirstLoad = true;
+    let isTransitioning = false;
+    let lastSlideTimestamp = Date.now();
 
     const imgLayerA = document.getElementById('image-layer-a');
     const imgLayerB = document.getElementById('image-layer-b');
@@ -245,53 +248,65 @@
     }
 
     function nextItem() {
+      if (isTransitioning) return; // 슬라이드 전환 중 중복 실행 원천 차단 (더블 스킵 방지)
       currentIndex = (currentIndex + 1) % PLAYLIST.length;
       playCurrentItem();
     }
 
     function playCurrentItem() {
       clearTimeout(timerId);
+      timerId = null;
       clearInterval(progressTimer);
+      progressTimer = null;
 
       if (!PLAYLIST || PLAYLIST.length === 0) return;
       const item = PLAYLIST[currentIndex];
       showImage(item.src);
     }
 
-    let isFirstLoad = true;
-
     function showImage(src) {
       const nextLayer = (activeImageLayer === 'A') ? imgLayerB : imgLayerA;
       const currentLayer = (activeImageLayer === 'A') ? imgLayerA : imgLayerB;
 
-      nextLayer.src = src;
+      // 이전 이벤트 핸들러 초기화 (중복 트리거 방지)
+      nextLayer.onload = null;
+      nextLayer.onerror = null;
+
       nextLayer.onload = () => {
+        lastSlideTimestamp = Date.now(); // 정상 전환 시점 기록
+
         if (isFirstLoad) {
           nextLayer.classList.remove('exit-left', 'no-transition');
           nextLayer.classList.add('active');
           activeImageLayer = (activeImageLayer === 'A') ? 'B' : 'A';
           isFirstLoad = false;
+          isTransitioning = false;
         } else {
-          // 1. 다음 레이어를 오른쪽 밖(대기 위치)으로 즉시 이동 (트랜지션 끄기)
+          isTransitioning = true; // 전환 락 활성화
+
           nextLayer.classList.add('no-transition');
           nextLayer.classList.remove('active', 'exit-left');
-          void nextLayer.offsetWidth; // 강제 리플로우 (GPU 렌더러 동기화)
+          void nextLayer.offsetWidth; // GPU 렌더러 동기화
 
-          // 2. 트랜지션 다시 켜고 두 레이어 동시 슬라이드 이동!
           requestAnimationFrame(() => {
             nextLayer.classList.remove('no-transition');
             currentLayer.classList.remove('no-transition');
 
             currentLayer.classList.remove('active');
-            currentLayer.classList.add('exit-left'); // 이전 사진: 왼쪽 밖으로
+            currentLayer.classList.add('exit-left');
 
-            nextLayer.classList.add('active');       // 새 사진: 오른쪽에서 중앙으로!
+            nextLayer.classList.add('active');
 
             activeImageLayer = (activeImageLayer === 'A') ? 'B' : 'A';
+
+            // 0.75초 후 전환 락 해제
+            setTimeout(() => {
+              isTransitioning = false;
+            }, 750);
           });
         }
 
-        // 상단 헤더도 사진 전환 시 미세 리액션 (고정 UI 오인 방지)
+        // 상단 헤더 미세 이동
         const header = document.getElementById('overlay-header');
         if (header) {
           const ox = Math.floor(Math.random() * 6) - 3;
@@ -299,13 +314,18 @@
           header.style.transform = `translate(${ox}px, ${oy}px)`;
         }
 
+        // 정확히 7초 단일 타이머 가동
         startProgressBar(CONFIG.imageDuration);
+        clearTimeout(timerId);
         timerId = setTimeout(nextItem, CONFIG.imageDuration);
       };
 
       nextLayer.onerror = () => {
+        clearTimeout(timerId);
         timerId = setTimeout(nextItem, 1500);
       };
+
+      nextLayer.src = src;
     }
 
     // 마우스 3초 무반응 시 커서 숨김
@@ -423,13 +443,14 @@
       if (document.visibilityState === 'visible') requestScreenWakeLock();
     });
 
-    // 슬라이드쇼 정지 방지 워치독 (혹시 15초 이상 사진이 안 넘어가면 강제 복구)
+    // 스마트 비상 복구 워치독 (25초 이상 사진 전환이 멈췄을 때만 비상 복구)
     setInterval(() => {
-      const currentActive = document.querySelector('.media-item.active');
-      if (!currentActive) {
-        playCurrentItem();
+      if (Date.now() - lastSlideTimestamp > 25000) {
+        lastSlideTimestamp = Date.now();
+        isTransitioning = false;
+        nextItem();
       }
-    }, 15000);
+    }, 5000);
 
     window.onload = () => {
       playCurrentItem();
