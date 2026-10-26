@@ -48,7 +48,7 @@
       object-fit: contain;
       background-color: #000000;
       will-change: transform;
-      transform: translate3d(100%, 0, 0); /* 대기 상태: 화면 오른쪽 밖 */
+      transform: translate3d(100%, 0, 0); /* 기본 대기 상태: 화면 오른쪽 밖 */
       transition: transform 0.65s cubic-bezier(0.25, 1, 0.5, 1);
       image-rendering: -webkit-optimize-contrast;
       image-rendering: high-quality;
@@ -56,13 +56,17 @@
     }
 
     .slide-layer.active {
-      transform: translate3d(0, 0, 0); /* 현재 표시: 화면 중앙 */
+      transform: translate3d(0, 0, 0) !important; /* 현재 표시: 화면 중앙 */
       z-index: 10;
     }
 
     .slide-layer.exit-left {
-      transform: translate3d(-100%, 0, 0); /* 퇴장: 화면 왼쪽 밖 */
+      transform: translate3d(-100%, 0, 0) !important; /* 퇴장: 화면 왼쪽 밖 */
       z-index: 5;
+    }
+
+    .slide-layer.no-transition {
+      transition: none !important;
     }
 
     /* 상단 정보바 (로고/문구, 시계, 날짜) */
@@ -184,13 +188,13 @@
 
     // 현재 등록된 사진 목록
     const PLAYLIST = [
-      { type: 'image', src: 'media/slide_01.jpg?v=1792990966' },
-      { type: 'image', src: 'media/slide_02.jpg?v=1792990966' },
-      { type: 'image', src: 'media/slide_03.jpg?v=1792990966' },
-      { type: 'image', src: 'media/slide_04.jpg?v=1792990966' },
-      { type: 'image', src: 'media/slide_05.jpg?v=1792990966' },
-      { type: 'image', src: 'media/slide_06.jpg?v=1792990966' },
-      { type: 'image', src: 'media/slide_07.jpg?v=1792990966' }
+      { type: 'image', src: 'media/slide_01.jpg?v=1792991260' },
+      { type: 'image', src: 'media/slide_02.jpg?v=1792991260' },
+      { type: 'image', src: 'media/slide_03.jpg?v=1792991260' },
+      { type: 'image', src: 'media/slide_04.jpg?v=1792991260' },
+      { type: 'image', src: 'media/slide_05.jpg?v=1792991260' },
+      { type: 'image', src: 'media/slide_06.jpg?v=1792991260' },
+      { type: 'image', src: 'media/slide_07.jpg?v=1792991260' }
     ];
 
     let currentIndex = 0;
@@ -263,31 +267,28 @@
       nextLayer.src = src;
       nextLayer.onload = () => {
         if (isFirstLoad) {
-          nextLayer.classList.remove('exit-left');
+          nextLayer.classList.remove('exit-left', 'no-transition');
           nextLayer.classList.add('active');
           activeImageLayer = (activeImageLayer === 'A') ? 'B' : 'A';
           isFirstLoad = false;
         } else {
-          // TV 정지화면 감지기(ASBL)를 무력화하는 100% 풀스크린 3D 슬라이드 모션
-          nextLayer.style.transition = 'none';
-          nextLayer.classList.remove('exit-left', 'active');
-          nextLayer.style.transform = 'translate3d(100%, 0, 0)';
+          // 1. 다음 레이어를 오른쪽 밖(대기 위치)으로 즉시 이동 (트랜지션 끄기)
+          nextLayer.classList.add('no-transition');
+          nextLayer.classList.remove('active', 'exit-left');
           void nextLayer.offsetWidth; // 강제 리플로우 (GPU 렌더러 동기화)
 
-          nextLayer.style.transition = 'transform 0.65s cubic-bezier(0.25, 1, 0.5, 1)';
-          currentLayer.style.transition = 'transform 0.65s cubic-bezier(0.25, 1, 0.5, 1)';
+          // 2. 트랜지션 다시 켜고 두 레이어 동시 슬라이드 이동!
+          requestAnimationFrame(() => {
+            nextLayer.classList.remove('no-transition');
+            currentLayer.classList.remove('no-transition');
 
-          currentLayer.classList.remove('active');
-          currentLayer.classList.add('exit-left');
-          nextLayer.classList.add('active');
+            currentLayer.classList.remove('active');
+            currentLayer.classList.add('exit-left'); // 이전 사진: 왼쪽 밖으로
 
-          activeImageLayer = (activeImageLayer === 'A') ? 'B' : 'A';
+            nextLayer.classList.add('active');       // 새 사진: 오른쪽에서 중앙으로!
 
-          setTimeout(() => {
-            currentLayer.style.transition = 'none';
-            currentLayer.classList.remove('exit-left');
-            currentLayer.style.transform = 'translate3d(100%, 0, 0)';
-          }, 700);
+            activeImageLayer = (activeImageLayer === 'A') ? 'B' : 'A';
+          });
         }
 
         // 상단 헤더도 사진 전환 시 미세 리액션 (고정 UI 오인 방지)
