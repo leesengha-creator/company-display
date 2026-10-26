@@ -147,6 +147,9 @@
     <img id="image-layer-a" class="media-item" alt="공지 이미지">
     <img id="image-layer-b" class="media-item" alt="공지 이미지">
 
+    <!-- LG TV 스크린세이버 방지용 1px 무음 비디오 루프 -->
+    <video id="keep-alive-video" autoplay loop muted playsinline style="position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;"></video>
+
     <div id="overlay-header">
       <div id="logo-container">🏢 사내 공지 게시판</div>
       <div id="clock-container">
@@ -174,13 +177,13 @@
 
     // 현재 등록된 사진 목록
     const PLAYLIST = [
-      { type: 'image', src: 'media/slide_01.jpg?v=1792551580' },
-      { type: 'image', src: 'media/slide_02.jpg?v=1792551580' },
-      { type: 'image', src: 'media/slide_03.jpg?v=1792551580' },
-      { type: 'image', src: 'media/slide_04.jpg?v=1792551580' },
-      { type: 'image', src: 'media/slide_05.jpg?v=1792551580' },
-      { type: 'image', src: 'media/slide_06.jpg?v=1792551580' },
-      { type: 'image', src: 'media/slide_07.jpg?v=1792551580' }
+      { type: 'image', src: 'media/slide_01.jpg?v=1792982472' },
+      { type: 'image', src: 'media/slide_02.jpg?v=1792982472' },
+      { type: 'image', src: 'media/slide_03.jpg?v=1792982472' },
+      { type: 'image', src: 'media/slide_04.jpg?v=1792982472' },
+      { type: 'image', src: 'media/slide_05.jpg?v=1792982472' },
+      { type: 'image', src: 'media/slide_06.jpg?v=1792982472' },
+      { type: 'image', src: 'media/slide_07.jpg?v=1792982472' }
     ];
 
     let currentIndex = 0;
@@ -297,7 +300,80 @@
       }, CONFIG.autoReloadMinutes * 60 * 1000);
     }
 
-    window.onload = () => playCurrentItem();
+    // =========================================================================
+    // [LG TV 스크린세이버 / 화면 보호기 방지 3중 시스템]
+    // =========================================================================
+
+    // 1. 가상 비디오 스트림 무한 재생 (TV OS에 '동영상 시청 중' 신호 전달하여 화면 보호기 차단)
+    function initKeepAliveVideo() {
+      try {
+        const kv = document.getElementById('keep-alive-video');
+        const cvs = document.createElement('canvas');
+        cvs.width = 4;
+        cvs.height = 4;
+        const ctx = cvs.getContext('2d');
+        setInterval(() => {
+          ctx.fillStyle = (ctx.fillStyle === '#000000') ? '#000001' : '#000000';
+          ctx.fillRect(0, 0, 4, 4);
+        }, 1000);
+
+        if (cvs.captureStream) {
+          kv.srcObject = cvs.captureStream(1);
+          kv.play().catch(() => {});
+        }
+      } catch (e) {
+        console.log('Keep-alive video init skipped:', e);
+      }
+    }
+
+    // 2. Screen Wake Lock API (화면 꺼짐 방지 브라우저 표준)
+    let wakeLockObj = null;
+    async function requestScreenWakeLock() {
+      if ('wakeLock' in navigator) {
+        try {
+          wakeLockObj = await navigator.wakeLock.request('screen');
+          wakeLockObj.addEventListener('release', () => {
+            setTimeout(requestScreenWakeLock, 2000);
+          });
+        } catch (err) {}
+      }
+    }
+    document.addEventListener('visibilitychange', () => {
+      if (document.visibilityState === 'visible') requestScreenWakeLock();
+    });
+
+    // 3. 주기적 가상 리모컨 / 키보드 입력 신호 발생 (2분마다 가상 입력 이벤트 발생)
+    setInterval(() => {
+      ['keydown', 'keyup'].forEach(eventType => {
+        const ev = new KeyboardEvent(eventType, {
+          key: 'Shift',
+          code: 'ShiftRight',
+          bubbles: true,
+          cancelable: true
+        });
+        window.dispatchEvent(ev);
+        document.dispatchEvent(ev);
+      });
+
+      const mouseEv = new MouseEvent('mousemove', {
+        clientX: Math.floor(Math.random() * 20) + 10,
+        clientY: Math.floor(Math.random() * 20) + 10,
+        bubbles: true
+      });
+      window.dispatchEvent(mouseEv);
+      document.dispatchEvent(mouseEv);
+
+      const kv = document.getElementById('keep-alive-video');
+      if (kv && kv.paused) {
+        kv.play().catch(() => {});
+      }
+    }, 120000); // 2분마다 지속 실행
+
+    window.onload = () => {
+      playCurrentItem();
+      initKeepAliveVideo();
+      requestScreenWakeLock();
+    };
   </script>
 </body>
 </html>
