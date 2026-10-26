@@ -147,8 +147,9 @@
     <img id="image-layer-a" class="media-item" alt="공지 이미지">
     <img id="image-layer-b" class="media-item" alt="공지 이미지">
 
-    <!-- LG TV 스크린세이버 방지용 1px 무음 비디오 루프 -->
-    <video id="keep-alive-video" autoplay loop muted playsinline style="position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:-1;"></video>
+    <!-- LG TV 스크린세이버 방지용 더미 버튼 & 실제 MP4 비디오 루프 -->
+    <button id="remote-dummy-btn" style="position:fixed;top:-100px;left:-100px;opacity:0;pointer-events:none;" tabindex="-1"></button>
+    <video id="keep-alive-video" src="media/keepalive.mp4" autoplay loop muted playsinline style="position:fixed;bottom:0;right:0;width:2px;height:2px;opacity:0.01;pointer-events:none;z-index:-1;"></video>
 
     <div id="overlay-header">
       <div id="logo-container">🏢 사내 공지 게시판</div>
@@ -177,13 +178,13 @@
 
     // 현재 등록된 사진 목록
     const PLAYLIST = [
-      { type: 'image', src: 'media/slide_01.jpg?v=1792982472' },
-      { type: 'image', src: 'media/slide_02.jpg?v=1792982472' },
-      { type: 'image', src: 'media/slide_03.jpg?v=1792982472' },
-      { type: 'image', src: 'media/slide_04.jpg?v=1792982472' },
-      { type: 'image', src: 'media/slide_05.jpg?v=1792982472' },
-      { type: 'image', src: 'media/slide_06.jpg?v=1792982472' },
-      { type: 'image', src: 'media/slide_07.jpg?v=1792982472' }
+      { type: 'image', src: 'media/slide_01.jpg?v=1792988165' },
+      { type: 'image', src: 'media/slide_02.jpg?v=1792988165' },
+      { type: 'image', src: 'media/slide_03.jpg?v=1792988165' },
+      { type: 'image', src: 'media/slide_04.jpg?v=1792988165' },
+      { type: 'image', src: 'media/slide_05.jpg?v=1792988165' },
+      { type: 'image', src: 'media/slide_06.jpg?v=1792988165' },
+      { type: 'image', src: 'media/slide_07.jpg?v=1792988165' }
     ];
 
     let currentIndex = 0;
@@ -301,40 +302,79 @@
     }
 
     // =========================================================================
-    // [LG TV 스크린세이버 / 화면 보호기 방지 3중 시스템]
+    // [LG TV 물리 리모컨 버튼 자동 누름 에뮬레이터 (60초 주기)]
     // =========================================================================
 
-    // 1. 가상 비디오 스트림 무한 재생 (TV OS에 '동영상 시청 중' 신호 전달하여 화면 보호기 차단)
-    function initKeepAliveVideo() {
-      try {
-        const kv = document.getElementById('keep-alive-video');
-        const cvs = document.createElement('canvas');
-        cvs.width = 4;
-        cvs.height = 4;
-        const ctx = cvs.getContext('2d');
-        setInterval(() => {
-          ctx.fillStyle = (ctx.fillStyle === '#000000') ? '#000001' : '#000000';
-          ctx.fillRect(0, 0, 4, 4);
-        }, 1000);
+    function simulateRemoteButtonPress() {
+      // 1. 투명 버튼 강제 포커스 & 클릭 (webOS 인터랙션 이벤트 강제 트리거)
+      const btn = document.getElementById('remote-dummy-btn');
+      if (btn) {
+        try {
+          btn.focus();
+          btn.click();
+          btn.blur();
+        } catch (e) {}
+      }
 
-        if (cvs.captureStream) {
-          kv.srcObject = cvs.captureStream(1);
-          kv.play().catch(() => {});
-        }
-      } catch (e) {
-        console.log('Keep-alive video init skipped:', e);
+      // 2. webOS 리모컨 물리 방향키/확인키 신호 전송
+      const remoteKeys = [
+        { key: 'ArrowRight', keyCode: 39, code: 'ArrowRight' },
+        { key: 'ArrowLeft',  keyCode: 37, code: 'ArrowLeft' },
+        { key: 'Enter',       keyCode: 13, code: 'Enter' },
+        { key: 'Shift',       keyCode: 16, code: 'ShiftRight' }
+      ];
+      const target = remoteKeys[Math.floor(Math.random() * remoteKeys.length)];
+
+      ['keydown', 'keypress', 'keyup'].forEach(evtType => {
+        try {
+          const ev = new KeyboardEvent(evtType, {
+            key: target.key,
+            code: target.code,
+            keyCode: target.keyCode,
+            which: target.keyCode,
+            bubbles: true,
+            cancelable: true,
+            composed: true
+          });
+          window.dispatchEvent(ev);
+          document.dispatchEvent(ev);
+          if (document.body) document.body.dispatchEvent(ev);
+        } catch (e) {}
+      });
+
+      // 3. 마우스 물리 이동 신호 발생
+      try {
+        const mouseEv = new MouseEvent('mousemove', {
+          clientX: Math.floor(Math.random() * 50) + 10,
+          clientY: Math.floor(Math.random() * 50) + 10,
+          bubbles: true,
+          cancelable: true
+        });
+        window.dispatchEvent(mouseEv);
+      } catch (e) {}
+
+      // 4. 화면 미세 스크롤 핑 (TV 렌더러 웨이크업)
+      try {
+        window.scrollBy(0, 1);
+        window.scrollBy(0, -1);
+      } catch (e) {}
+
+      // 5. 백그라운드 MP4 재생 상태 유지
+      const kv = document.getElementById('keep-alive-video');
+      if (kv && kv.paused) {
+        kv.play().catch(() => {});
       }
     }
 
-    // 2. Screen Wake Lock API (화면 꺼짐 방지 브라우저 표준)
-    let wakeLockObj = null;
+    // 60초(1분)마다 리모컨 버튼 누름 시뮬레이션 자동 실행
+    setInterval(simulateRemoteButtonPress, 60000);
+
+    // Screen Wake Lock API
     async function requestScreenWakeLock() {
       if ('wakeLock' in navigator) {
         try {
-          wakeLockObj = await navigator.wakeLock.request('screen');
-          wakeLockObj.addEventListener('release', () => {
-            setTimeout(requestScreenWakeLock, 2000);
-          });
+          const lock = await navigator.wakeLock.request('screen');
+          lock.addEventListener('release', () => setTimeout(requestScreenWakeLock, 2000));
         } catch (err) {}
       }
     }
@@ -342,37 +382,21 @@
       if (document.visibilityState === 'visible') requestScreenWakeLock();
     });
 
-    // 3. 주기적 가상 리모컨 / 키보드 입력 신호 발생 (2분마다 가상 입력 이벤트 발생)
-    setInterval(() => {
-      ['keydown', 'keyup'].forEach(eventType => {
-        const ev = new KeyboardEvent(eventType, {
-          key: 'Shift',
-          code: 'ShiftRight',
-          bubbles: true,
-          cancelable: true
-        });
-        window.dispatchEvent(ev);
-        document.dispatchEvent(ev);
-      });
-
-      const mouseEv = new MouseEvent('mousemove', {
-        clientX: Math.floor(Math.random() * 20) + 10,
-        clientY: Math.floor(Math.random() * 20) + 10,
-        bubbles: true
-      });
-      window.dispatchEvent(mouseEv);
-      document.dispatchEvent(mouseEv);
-
+    // 화면 클릭/터치 시 비디오 및 웨이크락 확실히 언락
+    window.addEventListener('click', () => {
       const kv = document.getElementById('keep-alive-video');
-      if (kv && kv.paused) {
-        kv.play().catch(() => {});
-      }
-    }, 120000); // 2분마다 지속 실행
+      if (kv) kv.play().catch(() => {});
+      requestScreenWakeLock();
+      simulateRemoteButtonPress();
+    }, { once: false });
 
     window.onload = () => {
       playCurrentItem();
-      initKeepAliveVideo();
       requestScreenWakeLock();
+      const kv = document.getElementById('keep-alive-video');
+      if (kv) kv.play().catch(() => {});
+      // 5초 후 첫 리모컨 누름 실행
+      setTimeout(simulateRemoteButtonPress, 5000);
     };
   </script>
 </body>
