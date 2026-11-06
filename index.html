@@ -95,32 +95,54 @@
       letter-spacing: -0.5px;
     }
 
-    #vision-logo {
-      width: 510px;
+    #right-logo-switcher {
+      position: relative;
+      margin-top: 10px;
+      width: 210px;
+      height: 52px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .alt-logo {
+      position: absolute;
+      width: 210px;
+      max-height: 52px;
       height: auto;
       object-fit: contain;
       filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.85));
-      animation: softBlink 2.8s ease-in-out infinite;
     }
 
     #re-logo {
-      margin-top: 10px;
-      width: 210px;
-      height: auto;
-      object-fit: contain;
-      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.85));
-      animation: softBlink 2.8s ease-in-out infinite;
+      animation: switchLogoA 5.6s ease-in-out infinite;
     }
 
-    @keyframes softBlink {
-      0%, 70% {
+    #vision-logo {
+      animation: switchLogoB 5.6s ease-in-out infinite;
+    }
+
+    @keyframes switchLogoA {
+      0%, 38% {
         opacity: 1;
       }
-      85% {
-        opacity: 0.12;
+      50%, 88% {
+        opacity: 0;
       }
       100% {
         opacity: 1;
+      }
+    }
+
+    @keyframes switchLogoB {
+      0%, 38% {
+        opacity: 0;
+      }
+      50%, 88% {
+        opacity: 1;
+      }
+      100% {
+        opacity: 0;
       }
     }
 
@@ -262,13 +284,14 @@
     <div id="keepalive-box" style="position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:9999;"></div>
 
     <div id="overlay-header">
-      <div id="logo-container">
-        <img id="vision-logo" src="media/vision_logo.png?v=1793930232" alt="Customer Life C.A.R.E Partner" onerror="this.style.display='none'">
-      </div>
+      <div id="logo-container"></div>
       <div id="clock-container">
         <div id="digital-clock">00:00</div>
         <div id="date-display">2026.00.00 (월)</div>
-        <img id="re-logo" src="media/re_logo.png?v=1793930232" alt="REINVENT 2.0 로고" onerror="this.style.display='none'">
+        <div id="right-logo-switcher">
+          <img id="re-logo" class="alt-logo" src="media/re_logo.png?v=1793933888" alt="REINVENT 2.0 로고" onerror="this.style.display='none'">
+          <img id="vision-logo" class="alt-logo" src="media/vision_logo.png?v=1793933888" alt="Customer Life C.A.R.E Partner" onerror="this.style.display='none'">
+        </div>
         <div id="live-badge">
           <span class="live-dot-wrapper">
             <span class="live-pulse"></span>
@@ -298,15 +321,15 @@
 
     // 현재 등록된 사진 목록
     const PLAYLIST = [
-      { type: 'image', src: 'media/slide_01.jpg?v=1793930232' },
-      { type: 'image', src: 'media/slide_02.jpg?v=1793930232' },
-      { type: 'image', src: 'media/slide_03.jpg?v=1793930232' },
-      { type: 'image', src: 'media/slide_04.jpg?v=1793930232' },
-      { type: 'image', src: 'media/slide_05.jpg?v=1793930232' },
-      { type: 'image', src: 'media/slide_06.jpg?v=1793930232' },
-      { type: 'image', src: 'media/slide_07.jpg?v=1793930232' },
-      { type: 'image', src: 'media/slide_08.jpg?v=1793930232' },
-      { type: 'image', src: 'media/slide_09.jpg?v=1793930232' }
+      { type: 'image', src: 'media/slide_01.jpg?v=1793933888' },
+      { type: 'image', src: 'media/slide_02.jpg?v=1793933888' },
+      { type: 'image', src: 'media/slide_03.jpg?v=1793933888' },
+      { type: 'image', src: 'media/slide_04.jpg?v=1793933888' },
+      { type: 'image', src: 'media/slide_05.jpg?v=1793933888' },
+      { type: 'image', src: 'media/slide_06.jpg?v=1793933888' },
+      { type: 'image', src: 'media/slide_07.jpg?v=1793933888' },
+      { type: 'image', src: 'media/slide_08.jpg?v=1793933888' },
+      { type: 'image', src: 'media/slide_09.jpg?v=1793933888' }
     ];
 
     let currentIndex = 0;
