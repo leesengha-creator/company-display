@@ -78,7 +78,7 @@
       z-index: 100;
       display: flex;
       justify-content: space-between;
-      align-items: center;
+      align-items: flex-start;
       pointer-events: none;
       color: rgba(255, 255, 255, 0.88);
       text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7);
@@ -86,9 +86,33 @@
     }
 
     #logo-container {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-start;
+      gap: 10px;
       font-size: 24px;
       font-weight: 700;
       letter-spacing: -0.5px;
+    }
+
+    #re-logo {
+      width: 240px;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.85));
+      animation: softBlink 2.8s ease-in-out infinite;
+    }
+
+    @keyframes softBlink {
+      0%, 70% {
+        opacity: 1;
+      }
+      85% {
+        opacity: 0.12;
+      }
+      100% {
+        opacity: 1;
+      }
     }
 
     #clock-container {
@@ -162,7 +186,10 @@
     <div id="keepalive-box" style="position:fixed;bottom:0;right:0;width:1px;height:1px;opacity:0.01;pointer-events:none;z-index:9999;"></div>
 
     <div id="overlay-header">
-      <div id="logo-container">🏢 고가혁 사내 공지 게시판</div>
+      <div id="logo-container">
+        <div>🏢 고가혁 사내 공지 게시판</div>
+        <img id="re-logo" src="media/re_logo.png?v=1793929082" alt="REINVENT 2.0 로고" onerror="this.style.display='none'">
+      </div>
       <div id="clock-container">
         <div id="digital-clock">00:00</div>
         <div id="date-display">2026.00.00 (월)</div>
@@ -188,16 +215,15 @@
 
     // 현재 등록된 사진 목록
     const PLAYLIST = [
-      { type: 'image', src: 'media/slide_01.jpg?v=1793924707' },
-      { type: 'image', src: 'media/slide_02.jpg?v=1793924707' },
-      { type: 'image', src: 'media/slide_03.jpg?v=1793924707' },
-      { type: 'image', src: 'media/slide_04.jpg?v=1793924707' },
-      { type: 'image', src: 'media/slide_05.jpg?v=1793924707' },
-      { type: 'image', src: 'media/slide_06.png?v=1793924707' },
-      { type: 'image', src: 'media/slide_07.jpg?v=1793924707' },
-      { type: 'image', src: 'media/slide_08.jpg?v=1793924707' },
-      { type: 'image', src: 'media/slide_09.jpg?v=1793924707' },
-      { type: 'image', src: 'media/slide_10.jpg?v=1793924707' }
+      { type: 'image', src: 'media/slide_01.jpg?v=1793929082' },
+      { type: 'image', src: 'media/slide_02.jpg?v=1793929082' },
+      { type: 'image', src: 'media/slide_03.jpg?v=1793929082' },
+      { type: 'image', src: 'media/slide_04.jpg?v=1793929082' },
+      { type: 'image', src: 'media/slide_05.jpg?v=1793929082' },
+      { type: 'image', src: 'media/slide_06.jpg?v=1793929082' },
+      { type: 'image', src: 'media/slide_07.jpg?v=1793929082' },
+      { type: 'image', src: 'media/slide_08.jpg?v=1793929082' },
+      { type: 'image', src: 'media/slide_09.jpg?v=1793929082' }
     ];
 
     let currentIndex = 0;
