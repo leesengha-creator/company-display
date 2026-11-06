@@ -95,8 +95,17 @@
       letter-spacing: -0.5px;
     }
 
+    #vision-logo {
+      width: 340px;
+      height: auto;
+      object-fit: contain;
+      filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.85));
+      animation: softBlink 2.8s ease-in-out infinite;
+    }
+
     #re-logo {
-      width: 240px;
+      margin-top: 10px;
+      width: 210px;
       height: auto;
       object-fit: contain;
       filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.85));
@@ -254,11 +263,12 @@
 
     <div id="overlay-header">
       <div id="logo-container">
-        <img id="re-logo" src="media/re_logo.png?v=1793929371" alt="REINVENT 2.0 로고" onerror="this.style.display='none'">
+        <img id="vision-logo" src="media/vision_logo.png?v=1793929859" alt="Customer Life C.A.R.E Partner" onerror="this.style.display='none'">
       </div>
       <div id="clock-container">
         <div id="digital-clock">00:00</div>
         <div id="date-display">2026.00.00 (월)</div>
+        <img id="re-logo" src="media/re_logo.png?v=1793929859" alt="REINVENT 2.0 로고" onerror="this.style.display='none'">
         <div id="live-badge">
           <span class="live-dot-wrapper">
             <span class="live-pulse"></span>
@@ -288,15 +298,15 @@
 
     // 현재 등록된 사진 목록
     const PLAYLIST = [
-      { type: 'image', src: 'media/slide_01.jpg?v=1793929371' },
-      { type: 'image', src: 'media/slide_02.jpg?v=1793929371' },
-      { type: 'image', src: 'media/slide_03.jpg?v=1793929371' },
-      { type: 'image', src: 'media/slide_04.jpg?v=1793929371' },
-      { type: 'image', src: 'media/slide_05.jpg?v=1793929371' },
-      { type: 'image', src: 'media/slide_06.jpg?v=1793929371' },
-      { type: 'image', src: 'media/slide_07.jpg?v=1793929371' },
-      { type: 'image', src: 'media/slide_08.jpg?v=1793929371' },
-      { type: 'image', src: 'media/slide_09.jpg?v=1793929371' }
+      { type: 'image', src: 'media/slide_01.jpg?v=1793929859' },
+      { type: 'image', src: 'media/slide_02.jpg?v=1793929859' },
+      { type: 'image', src: 'media/slide_03.jpg?v=1793929859' },
+      { type: 'image', src: 'media/slide_04.jpg?v=1793929859' },
+      { type: 'image', src: 'media/slide_05.jpg?v=1793929859' },
+      { type: 'image', src: 'media/slide_06.jpg?v=1793929859' },
+      { type: 'image', src: 'media/slide_07.jpg?v=1793929859' },
+      { type: 'image', src: 'media/slide_08.jpg?v=1793929859' },
+      { type: 'image', src: 'media/slide_09.jpg?v=1793929859' }
     ];
 
     let currentIndex = 0;
