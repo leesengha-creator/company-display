@@ -137,6 +137,73 @@
       margin-top: 4px;
     }
 
+    /* 실시간 LIVE 캡슐 배지 & 네온 파동(Pulse Ring) 효과 */
+    #live-badge {
+      margin-top: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 9px;
+      padding: 6px 14px;
+      background: rgba(18, 18, 22, 0.72);
+      border: 1px solid rgba(255, 255, 255, 0.16);
+      border-radius: 999px;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 4px 14px rgba(0, 0, 0, 0.6);
+    }
+
+    .live-dot-wrapper {
+      position: relative;
+      width: 10px;
+      height: 10px;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background-color: #ff2a2a;
+      box-shadow: 0 0 8px #ff2a2a, 0 0 14px #ff2a2a;
+      z-index: 2;
+    }
+
+    .live-pulse {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border-radius: 50%;
+      background-color: rgba(255, 42, 42, 0.75);
+      animation: livePulseRing 1.8s cubic-bezier(0.215, 0.61, 0.355, 1) infinite;
+      z-index: 1;
+    }
+
+    @keyframes livePulseRing {
+      0% {
+        transform: scale(0.8);
+        opacity: 0.9;
+      }
+      75% {
+        transform: scale(2.8);
+        opacity: 0;
+      }
+      100% {
+        transform: scale(2.8);
+        opacity: 0;
+      }
+    }
+
+    .live-text {
+      font-size: 13px;
+      font-weight: 800;
+      letter-spacing: 1.5px;
+      color: #ffffff;
+      text-shadow: 0 0 8px rgba(255, 42, 42, 0.5);
+      line-height: 1;
+    }
+
     /* 하단 진행 상태 바 (3초 표시) */
     #progress-bar-container {
       position: absolute;
@@ -187,12 +254,18 @@
 
     <div id="overlay-header">
       <div id="logo-container">
-        <div>🏢 고가혁 사내 공지 게시판</div>
-        <img id="re-logo" src="media/re_logo.png?v=1793929082" alt="REINVENT 2.0 로고" onerror="this.style.display='none'">
+        <img id="re-logo" src="media/re_logo.png?v=1793929371" alt="REINVENT 2.0 로고" onerror="this.style.display='none'">
       </div>
       <div id="clock-container">
         <div id="digital-clock">00:00</div>
         <div id="date-display">2026.00.00 (월)</div>
+        <div id="live-badge">
+          <span class="live-dot-wrapper">
+            <span class="live-pulse"></span>
+            <span class="live-dot"></span>
+          </span>
+          <span class="live-text">LIVE</span>
+        </div>
       </div>
     </div>
 
@@ -215,15 +288,15 @@
 
     // 현재 등록된 사진 목록
     const PLAYLIST = [
-      { type: 'image', src: 'media/slide_01.jpg?v=1793929082' },
-      { type: 'image', src: 'media/slide_02.jpg?v=1793929082' },
-      { type: 'image', src: 'media/slide_03.jpg?v=1793929082' },
-      { type: 'image', src: 'media/slide_04.jpg?v=1793929082' },
-      { type: 'image', src: 'media/slide_05.jpg?v=1793929082' },
-      { type: 'image', src: 'media/slide_06.jpg?v=1793929082' },
-      { type: 'image', src: 'media/slide_07.jpg?v=1793929082' },
-      { type: 'image', src: 'media/slide_08.jpg?v=1793929082' },
-      { type: 'image', src: 'media/slide_09.jpg?v=1793929082' }
+      { type: 'image', src: 'media/slide_01.jpg?v=1793929371' },
+      { type: 'image', src: 'media/slide_02.jpg?v=1793929371' },
+      { type: 'image', src: 'media/slide_03.jpg?v=1793929371' },
+      { type: 'image', src: 'media/slide_04.jpg?v=1793929371' },
+      { type: 'image', src: 'media/slide_05.jpg?v=1793929371' },
+      { type: 'image', src: 'media/slide_06.jpg?v=1793929371' },
+      { type: 'image', src: 'media/slide_07.jpg?v=1793929371' },
+      { type: 'image', src: 'media/slide_08.jpg?v=1793929371' },
+      { type: 'image', src: 'media/slide_09.jpg?v=1793929371' }
     ];
 
     let currentIndex = 0;
