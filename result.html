@@ -492,20 +492,19 @@
 
   <script>
     /* ==========================================================================
-       [1] 콘테스트 후보 설정 (vote.html과 동일하게 맞춰주세요)
+       [1] 콘테스트 후보 설정 (vote.html과 동일하게 이름 / 소속 / 주제를 맞춰주세요)
        ========================================================================== */
     const CONTEST_CONFIG = {
       title: "CC&S 고객감동 콘테스트",
-      localFolderPath: "file:///D:/26년/EXG팀/1. 업무/고객CS감동콘테스트/12월 3일/",
       candidates: [
-        { id: 1, name: "후보 1", desc: "고객감동 우수 사례 #1", img: "contest_media/candidate_1.jpg" },
-        { id: 2, name: "후보 2", desc: "고객감동 우수 사례 #2", img: "contest_media/candidate_2.jpg" },
-        { id: 3, name: "후보 3", desc: "고객감동 우수 사례 #3", img: "contest_media/candidate_3.jpg" },
-        { id: 4, name: "후보 4", desc: "고객감동 우수 사례 #4", img: "contest_media/candidate_4.jpg" },
-        { id: 5, name: "후보 5", desc: "고객감동 우수 사례 #5", img: "contest_media/candidate_5.jpg" },
-        { id: 6, name: "후보 6", desc: "고객감동 우수 사례 #6", img: "contest_media/candidate_6.jpg" },
-        { id: 7, name: "후보 7", desc: "고객감동 우수 사례 #7", img: "contest_media/candidate_7.jpg" },
-        { id: 8, name: "후보 8", desc: "고객감동 우수 사례 #8", img: "contest_media/candidate_8.jpg" }
+        { id: 1, name: "후보 1", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #1)" },
+        { id: 2, name: "후보 2", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #2)" },
+        { id: 3, name: "후보 3", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #3)" },
+        { id: 4, name: "후보 4", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #4)" },
+        { id: 5, name: "후보 5", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #5)" },
+        { id: 6, name: "후보 6", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #6)" },
+        { id: 7, name: "후보 7", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #7)" },
+        { id: 8, name: "후보 8", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #8)" }
       ]
     };
 
@@ -515,33 +514,6 @@
 
     let currentSortMode = "rank"; // 'rank' or 'id'
     let latestCounts = {};
-    let resolvedImages = {};
-
-    // 후보 썸네일 이미지 존재 여부 사전 탐색
-    function preloadCandidateThumbs() {
-      const cacheBuster = "?t=" + Math.floor(Date.now() / 60000);
-      CONTEST_CONFIG.candidates.forEach((cand) => {
-        const baseName = cand.img.split("/").pop();
-        const tryPaths = [
-          cand.img + cacheBuster,
-          baseName + cacheBuster,
-          "media/" + baseName + cacheBuster,
-          CONTEST_CONFIG.localFolderPath + baseName,
-          CONTEST_CONFIG.localFolderPath + `${cand.id}.jpg`
-        ];
-        function tryLoad(idx) {
-          if (idx >= tryPaths.length) return;
-          const probe = new Image();
-          probe.onload = () => {
-            resolvedImages[cand.id] = tryPaths[idx];
-            renderBoard();
-          };
-          probe.onerror = () => tryLoad(idx + 1);
-          probe.src = tryPaths[idx];
-        }
-        tryLoad(0);
-      });
-    }
 
     // 실시간 투표 데이터 불러오기 (클라우드 채널 + 로컬 백업 병합)
     async function fetchLiveVotes() {
@@ -624,8 +596,8 @@
             <div class="medal-icon">${medals[idx]}</div>
             <div class="podium-info">
               <div class="podium-rank-label">${rankLabels[idx]}</div>
-              <div class="podium-name">기호 ${item.id}번 ${item.name}</div>
-              <div class="podium-desc">${item.desc}</div>
+              <div class="podium-name">기호 ${item.id}번 ${item.name} <span style="font-size:12px; font-weight:600; color:#60a5fa;">(${item.dept})</span></div>
+              <div class="podium-desc">${item.topic}</div>
             </div>
             <div class="podium-score">
               <span class="cnt">${item.votes}표</span>
@@ -645,17 +617,16 @@
         const pct = totalVotes > 0 ? Math.round((item.votes / totalVotes) * 1000) / 10 : 0;
         const isLeader = maxVotes > 0 && item.votes === maxVotes;
         const rankNum = ranked.findIndex((r) => r.id === item.id) + 1;
-        const thumbSrc = resolvedImages[item.id];
 
         return `
           <div class="result-row ${isLeader ? "is-leader" : ""}">
             <div class="row-top">
               <div class="row-cand">
                 <div class="rank-badge">${rankNum}위</div>
-                ${thumbSrc ? `<img src="${thumbSrc}" class="cand-thumb" style="display:block" onclick="openLightbox('${thumbSrc}')" alt="${item.name}">` : ""}
                 <div class="cand-title-group">
                   <span class="cand-title">기호 ${item.id}번 ${item.name}</span>
-                  <span class="cand-sub">${item.desc}</span>
+                  <span class="cand-sub" style="color:#60a5fa; font-weight:600;">[${item.dept}]</span>
+                  <span class="cand-sub">${item.topic}</span>
                 </div>
               </div>
               <div class="row-numbers">
@@ -723,7 +694,6 @@
 
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("contest-title").textContent = CONTEST_CONFIG.title + " 실시간 개표 현황";
-      preloadCandidateThumbs();
       fetchLiveVotes();
       setInterval(fetchLiveVotes, 3000);
     });
