@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>CC&S 고객감동 콘테스트 - 실시간 투표 결과</title>
+  <style>
+    :root {
+      --bg-dark: #070b14;
+      --panel-bg: #111827;
+      --panel-border: rgba(255, 255, 255, 0.09);
+      --gold: #fbbf24;
+      --silver: #cbd5e1;
+      --bronze: #d97706;
+      --accent: #3b82f6;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image:
+        radial-gradient(circle at 20% 10%, rgba(59, 130, 246, 0.16) 0%, transparent 45%),
+        radial-gradient(circle at 80% 85%, rgba(251, 191, 36, 0.12) 0%, transparent 45%);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", sans-serif;
+      min-height: 100vh;
+      padding-bottom: 60px;
+    }
+
+    .container {
+      max-width: 1120px;
+      margin: 0 auto;
+      padding: 28px 20px;
+    }
+
+    /* 상단 타이틀 & 실시간 상태 바 */
+    .top-bar {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 24px;
+      background: rgba(17, 24, 39, 0.85);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      padding: 22px 26px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    .title-area h1 {
+      font-size: clamp(22px, 4vw, 32px);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .title-area p {
+      font-size: 14px;
+      color: var(--text-sub);
+    }
+
+    .live-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(16, 185, 129, 0.15);
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      color: #34d399;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 999px;
+      vertical-align: middle;
+    }
+
+    .live-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse 1.5s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.85); }
+    }
+
+    /* 우측 컨트롤 & 요약 스탯 */
+    .stats-and-actions {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      flex-wrap: wrap;
+    }
+
+    .total-votes-box {
+      background: rgba(59, 130, 246, 0.12);
+      border: 1px solid rgba(59, 130, 246, 0.35);
+      padding: 10px 18px;
+      border-radius: 14px;
+      text-align: center;
+    }
+
+    .total-votes-box .lbl {
+      font-size: 11px;
+      color: #93c5fd;
+      font-weight: 600;
+      display: block;
+    }
+
+    .total-votes-box .val {
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+      line-height: 1.2;
+    }
+
+    .btn-action {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 10px 16px;
+      border-radius: 12px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .btn-action:hover {
+      background: rgba(255, 255, 255, 0.16);
+    }
+
+    .btn-danger {
+      color: #fca5a5;
+      border-color: rgba(239, 68, 68, 0.25);
+    }
+
+    .btn-danger:hover {
+      background: rgba(239, 68, 68, 0.15);
+    }
+
+    /* 상단 TOP 3 시상대 카드 */
+    .podium-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    @media (max-width: 720px) {
+      .podium-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    .podium-card {
+      background: linear-gradient(160deg, rgba(30, 41, 59, 0.9), rgba(15, 23, 42, 0.95));
+      border: 1px solid var(--panel-border);
+      border-radius: 18px;
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+    }
+
+    .podium-card.rank-1 {
+      border-color: rgba(251, 191, 36, 0.5);
+      background: linear-gradient(160deg, rgba(251, 191, 36, 0.14), rgba(15, 23, 42, 0.95));
+      box-shadow: 0 0 25px rgba(251, 191, 36, 0.15);
+    }
+
+    .podium-card.rank-2 {
+      border-color: rgba(203, 213, 225, 0.35);
+    }
+
+    .podium-card.rank-3 {
+      border-color: rgba(217, 119, 6, 0.35);
+    }
+
+    .medal-icon {
+      font-size: 36px;
+      flex-shrink: 0;
+    }
+
+    .podium-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .podium-rank-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--gold);
+      margin-bottom: 2px;
+    }
+
+    .podium-card.rank-2 .podium-rank-label { color: var(--silver); }
+    .podium-card.rank-3 .podium-rank-label { color: #fb923c; }
+
+    .podium-name {
+      font-size: 18px;
+      font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .podium-desc {
+      font-size: 12px;
+      color: var(--text-sub);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .podium-score {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .podium-score .cnt {
+      font-size: 24px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .podium-score .pct {
+      font-size: 12px;
+      color: var(--text-sub);
+      display: block;
+    }
+
+    /* 전체 8명 실시간 막대그래프 보드 */
+    .board-card {
+      background: rgba(17, 24, 39, 0.9);
+      border: 1px solid var(--panel-border);
+      border-radius: 20px;
+      padding: 24px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+    }
+
+    .board-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 18px;
+    }
+
+    .board-title {
+      font-size: 18px;
+      font-weight: 700;
+    }
+
+    .sort-toggle {
+      display: flex;
+      gap: 6px;
+      background: rgba(255, 255, 255, 0.05);
+      padding: 4px;
+      border-radius: 10px;
+    }
+
+    .sort-btn {
+      background: transparent;
+      color: var(--text-sub);
+      border: none;
+      padding: 6px 12px;
+      border-radius: 7px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .sort-btn.active {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .result-list {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .result-row {
+      background: rgba(30, 41, 59, 0.55);
+      border: 1px solid rgba(255, 255, 255, 0.07);
+      border-radius: 14px;
+      padding: 14px 18px;
+      transition: all 0.3s ease;
+    }
+
+    .result-row.is-leader {
+      border-color: rgba(251, 191, 36, 0.45);
+      background: rgba(251, 191, 36, 0.07);
+    }
+
+    .row-top {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+      gap: 12px;
+    }
+
+    .row-cand {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .rank-badge {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      font-size: 13px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+
+    .result-row.is-leader .rank-badge {
+      background: var(--gold);
+      color: #000;
+    }
+
+    .cand-thumb {
+      width: 40px;
+      height: 40px;
+      border-radius: 8px;
+      object-fit: cover;
+      background: #0f172a;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      flex-shrink: 0;
+      cursor: zoom-in;
+      display: none;
+    }
+
+    .cand-title-group {
+      min-width: 0;
+    }
+
+    .cand-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .cand-sub {
+      font-size: 12px;
+      color: var(--text-sub);
+      margin-left: 6px;
+    }
+
+    .row-numbers {
+      text-align: right;
+      flex-shrink: 0;
+    }
+
+    .vote-count {
+      font-size: 18px;
+      font-weight: 800;
+      color: #fff;
+    }
+
+    .vote-percent {
+      font-size: 13px;
+      color: #60a5fa;
+      font-weight: 700;
+      margin-left: 6px;
+    }
+
+    /* 막대그래프 트랙 */
+    .bar-track {
+      width: 100%;
+      height: 14px;
+      background: rgba(15, 23, 42, 0.8);
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .bar-fill {
+      height: 100%;
+      width: 0%;
+      border-radius: 999px;
+      background: linear-gradient(90deg, #3b82f6, #60a5fa);
+      transition: width 0.6s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    .result-row.is-leader .bar-fill {
+      background: linear-gradient(90deg, #f59e0b, #fbbf24);
+      box-shadow: 0 0 12px rgba(251, 191, 36, 0.5);
+    }
+
+    .footer-note {
+      text-align: center;
+      margin-top: 20px;
+      font-size: 12px;
+      color: #64748b;
+    }
+
+    /* 라이트박스 */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.active { display: flex; }
+    .lightbox-img { max-width: 92vw; max-height: 88vh; border-radius: 12px; }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- 1. 상단 타이틀 & 실시간 집계 현황 -->
+    <header class="top-bar">
+      <div class="title-area">
+        <h1>
+          <span id="contest-title">CC&amp;S 고객감동 콘테스트 결과</span>
+          <span class="live-badge"><span class="live-dot"></span>LIVE 실시간 집계</span>
+        </h1>
+        <p id="last-updated-text">3초마다 투표 결과를 자동으로 불러옵니다.</p>
+      </div>
+
+      <div class="stats-and-actions">
+        <div class="total-votes-box">
+          <span class="lbl">총 참여 투표수</span>
+          <span class="val" id="total-votes-num">0표</span>
+        </div>
+        <a href="vote.html" class="btn-action">🗳️ 투표 페이지로</a>
+        <button type="button" class="btn-action" onclick="toggleFullscreen()">🖥️ 전체화면</button>
+        <button type="button" class="btn-action btn-danger" onclick="resetAllVotes()">🔄 투표 초기화</button>
+      </div>
+    </header>
+
+    <!-- 2. 상위 TOP 3 하이라이트 시상대 -->
+    <section class="podium-grid" id="podium-grid"></section>
+
+    <!-- 3. 전체 후보 득표 현황 막대그래프 -->
+    <section class="board-card">
+      <div class="board-header">
+        <div class="board-title">📊 후보별 실시간 득표 현황</div>
+        <div class="sort-toggle">
+          <button type="button" class="sort-btn active" id="sort-rank" onclick="setSortMode('rank')">득표순 정렬</button>
+          <button type="button" class="sort-btn" id="sort-id" onclick="setSortMode('id')">기호순 정렬</button>
+        </div>
+      </div>
+
+      <div class="result-list" id="result-list"></div>
+      <div class="footer-note" id="sync-status-note">클라우드 실시간 동기화 연결됨</div>
+    </section>
+  </div>
+
+  <!-- 이미지 확대 모달 -->
+  <div class="modal-backdrop" id="lightbox-modal" onclick="closeLightbox()">
+    <img id="lightbox-img" class="lightbox-img" src="" alt="확대 이미지">
+  </div>
+
+  <script>
+    /* ==========================================================================
+       [1] 콘테스트 후보 설정 (vote.html과 동일하게 맞춰주세요)
+       ========================================================================== */
+    const CONTEST_CONFIG = {
+      title: "CC&S 고객감동 콘테스트",
+      candidates: [
+        { id: 1, name: "후보 1", desc: "고객감동 우수 사례 #1", img: "candidate_1.jpg" },
+        { id: 2, name: "후보 2", desc: "고객감동 우수 사례 #2", img: "candidate_2.jpg" },
+        { id: 3, name: "후보 3", desc: "고객감동 우수 사례 #3", img: "candidate_3.jpg" },
+        { id: 4, name: "후보 4", desc: "고객감동 우수 사례 #4", img: "candidate_4.jpg" },
+        { id: 5, name: "후보 5", desc: "고객감동 우수 사례 #5", img: "candidate_5.jpg" },
+        { id: 6, name: "후보 6", desc: "고객감동 우수 사례 #6", img: "candidate_6.jpg" },
+        { id: 7, name: "후보 7", desc: "고객감동 우수 사례 #7", img: "candidate_7.jpg" },
+        { id: 8, name: "후보 8", desc: "고객감동 우수 사례 #8", img: "candidate_8.jpg" }
+      ]
+    };
+
+    const CLOUD_SYNC = {
+      topic: "ccs_contest_2026_leesengha_v1"
+    };
+
+    let currentSortMode = "rank"; // 'rank' or 'id'
+    let latestCounts = {};
+    let resolvedImages = {};
+
+    // 후보 썸네일 이미지 존재 여부 사전 탐색
+    function preloadCandidateThumbs() {
+      const cacheBuster = "?t=" + Math.floor(Date.now() / 60000);
+      CONTEST_CONFIG.candidates.forEach((cand) => {
+        const probe = new Image();
+        probe.onload = () => {
+          resolvedImages[cand.id] = cand.img + cacheBuster;
+          renderBoard();
+        };
+        probe.onerror = () => {
+          const mediaProbe = new Image();
+          mediaProbe.onload = () => {
+            resolvedImages[cand.id] = "media/" + cand.img + cacheBuster;
+            renderBoard();
+          };
+          mediaProbe.src = "media/" + cand.img + cacheBuster;
+        };
+        probe.src = cand.img + cacheBuster;
+      });
+    }
+
+    // 실시간 투표 데이터 불러오기 (클라우드 채널 + 로컬 백업 병합)
+    async function fetchLiveVotes() {
+      const counts = {};
+      CONTEST_CONFIG.candidates.forEach((c) => { counts[c.id] = 0; });
+
+      try {
+        const res = await fetch(`https://ntfy.sh/${CLOUD_SYNC.topic}/json?poll=1&since=all`, {
+          cache: "no-store"
+        });
+
+        if (!res.ok) throw new Error("API status " + res.status);
+        const text = await res.text();
+        const lines = text.trim().split("\n").filter(Boolean);
+
+        lines.forEach((line) => {
+          try {
+            const evt = JSON.parse(line);
+            if (evt.event === "message" && evt.message) {
+              const data = JSON.parse(evt.message);
+              if (data.type === "reset") {
+                CONTEST_CONFIG.candidates.forEach((c) => { counts[c.id] = 0; });
+              } else if (data.type === "vote" || data.candidateId) {
+                const cid = Number(data.candidateId);
+                if (counts[cid] !== undefined) {
+                  counts[cid] += 1;
+                }
+              }
+            }
+          } catch (e) {}
+        });
+
+        latestCounts = counts;
+        const now = new Date();
+        document.getElementById("last-updated-text").textContent =
+          `마지막 실시간 갱신: ${now.toLocaleTimeString("ko-KR")} (3초마다 자동 반영)`;
+        document.getElementById("sync-status-note").textContent =
+          "🟢 클라우드 실시간 투표 서버와 정상 동기화 중입니다.";
+      } catch (err) {
+        // 오프라인이거나 로컬 테스트 중일 때는 localStorage 집계 사용
+        try {
+          const raw = localStorage.getItem("ccs_contest_2026_local_tally");
+          const localTally = raw ? JSON.parse(raw) : {};
+          Object.keys(localTally).forEach((k) => {
+            if (counts[k] !== undefined) counts[k] = localTally[k];
+          });
+        } catch (e) {}
+        latestCounts = counts;
+        document.getElementById("sync-status-note").textContent =
+          "🟡 로컬 브라우저 집계 모드로 표시 중입니다.";
+      }
+
+      renderBoard();
+    }
+
+    // 화면 렌더링 (상단 TOP 3 시상대 + 하단 막대그래프)
+    function renderBoard() {
+      const list = CONTEST_CONFIG.candidates.map((c) => ({
+        ...c,
+        votes: latestCounts[c.id] || 0
+      }));
+
+      const totalVotes = list.reduce((sum, item) => sum + item.votes, 0);
+      const maxVotes = Math.max(...list.map((i) => i.votes), 0);
+
+      document.getElementById("total-votes-num").textContent = `${totalVotes}표`;
+
+      // 득표순 정렬 복사본 (TOP 3 추출용)
+      const ranked = [...list].sort((a, b) => b.votes - a.votes || a.id - b.id);
+
+      // 1) TOP 3 시상대 렌더링
+      const podiumEl = document.getElementById("podium-grid");
+      const medals = ["🥇", "🥈", "🥉"];
+      const rankLabels = ["1위 (현재 선두)", "2위", "3위"];
+
+      podiumEl.innerHTML = ranked.slice(0, 3).map((item, idx) => {
+        const pct = totalVotes > 0 ? Math.round((item.votes / totalVotes) * 100) : 0;
+        return `
+          <div class="podium-card rank-${idx + 1}">
+            <div class="medal-icon">${medals[idx]}</div>
+            <div class="podium-info">
+              <div class="podium-rank-label">${rankLabels[idx]}</div>
+              <div class="podium-name">기호 ${item.id}번 ${item.name}</div>
+              <div class="podium-desc">${item.desc}</div>
+            </div>
+            <div class="podium-score">
+              <span class="cnt">${item.votes}표</span>
+              <span class="pct">${pct}%</span>
+            </div>
+          </div>
+        `;
+      }).join("");
+
+      // 2) 전체 리스트 정렬 및 렌더링
+      const displayList = currentSortMode === "rank"
+        ? ranked
+        : [...list].sort((a, b) => a.id - b.id);
+
+      const boardEl = document.getElementById("result-list");
+      boardEl.innerHTML = displayList.map((item, idx) => {
+        const pct = totalVotes > 0 ? Math.round((item.votes / totalVotes) * 1000) / 10 : 0;
+        const isLeader = maxVotes > 0 && item.votes === maxVotes;
+        const rankNum = ranked.findIndex((r) => r.id === item.id) + 1;
+        const thumbSrc = resolvedImages[item.id];
+
+        return `
+          <div class="result-row ${isLeader ? "is-leader" : ""}">
+            <div class="row-top">
+              <div class="row-cand">
+                <div class="rank-badge">${rankNum}위</div>
+                ${thumbSrc ? `<img src="${thumbSrc}" class="cand-thumb" style="display:block" onclick="openLightbox('${thumbSrc}')" alt="${item.name}">` : ""}
+                <div class="cand-title-group">
+                  <span class="cand-title">기호 ${item.id}번 ${item.name}</span>
+                  <span class="cand-sub">${item.desc}</span>
+                </div>
+              </div>
+              <div class="row-numbers">
+                <span class="vote-count">${item.votes}표</span>
+                <span class="vote-percent">(${pct}%)</span>
+              </div>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: ${pct}%;"></div>
+            </div>
+          </div>
+        `;
+      }).join("");
+    }
+
+    function setSortMode(mode) {
+      currentSortMode = mode;
+      document.getElementById("sort-rank").classList.toggle("active", mode === "rank");
+      document.getElementById("sort-id").classList.toggle("active", mode === "id");
+      renderBoard();
+    }
+
+    // 관리자용 투표 전체 초기화 (클라우드 리셋 이벤트 전송 + 참가자 재투표 허용)
+    async function resetAllVotes() {
+      const pw = prompt("모든 투표 기록을 0표로 초기화하시겠습니까?\n실수를 방지하기 위해 '초기화' 라고 입력해 주세요.");
+      if (pw !== "초기화") return;
+
+      document.getElementById("last-updated-text").textContent = "투표 데이터를 초기화하는 중입니다...";
+
+      localStorage.removeItem("ccs_contest_2026_local_tally");
+      localStorage.removeItem("ccs_contest_2026_voted_candidate");
+
+      try {
+        await fetch(`https://ntfy.sh/${CLOUD_SYNC.topic}`, {
+          method: "POST",
+          body: JSON.stringify({
+            type: "reset",
+            reset_id: Date.now()
+          })
+        });
+        alert("모든 투표 기록이 0표로 깨끗하게 초기화되었습니다!");
+      } catch (err) {
+        alert("로컬 투표 기록이 초기화되었습니다.");
+      }
+
+      fetchLiveVotes();
+    }
+
+    function toggleFullscreen() {
+      if (!document.fullscreenElement) {
+        document.documentElement.requestFullscreen().catch(() => {});
+      } else {
+        document.exitFullscreen().catch(() => {});
+      }
+    }
+
+    function openLightbox(src) {
+      document.getElementById("lightbox-img").src = src;
+      document.getElementById("lightbox-modal").classList.add("active");
+    }
+
+    function closeLightbox() {
+      document.getElementById("lightbox-modal").classList.remove("active");
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("contest-title").textContent = CONTEST_CONFIG.title + " 실시간 개표 현황";
+      preloadCandidateThumbs();
+      fetchLiveVotes();
+      setInterval(fetchLiveVotes, 3000);
+    });
+  </script>
+</body>
+</html>
