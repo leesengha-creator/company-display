@@ -202,8 +202,28 @@
     }
 
     .medal-icon {
-      font-size: 36px;
+      font-size: 32px;
       flex-shrink: 0;
+    }
+
+    .podium-avatar {
+      width: 54px;
+      height: 54px;
+      border-radius: 50%;
+      object-fit: cover;
+      background: #0f172a;
+      border: 2px solid rgba(251, 191, 36, 0.65);
+      flex-shrink: 0;
+      cursor: zoom-in;
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4);
+    }
+
+    .podium-card.rank-2 .podium-avatar {
+      border-color: rgba(203, 213, 225, 0.6);
+    }
+
+    .podium-card.rank-3 .podium-avatar {
+      border-color: rgba(217, 119, 6, 0.6);
     }
 
     .podium-info {
@@ -353,15 +373,20 @@
     }
 
     .cand-thumb {
-      width: 40px;
-      height: 40px;
-      border-radius: 8px;
+      width: 48px;
+      height: 48px;
+      border-radius: 10px;
       object-fit: cover;
       background: #0f172a;
-      border: 1px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.18);
       flex-shrink: 0;
       cursor: zoom-in;
-      display: none;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.35);
+      transition: transform 0.2s ease;
+    }
+
+    .cand-thumb:hover {
+      transform: scale(1.08);
     }
 
     .cand-title-group {
@@ -496,6 +521,7 @@
        ========================================================================== */
     const CONTEST_CONFIG = {
       title: "CC&S 고객감동 콘테스트",
+      localFolderPath: "file:///D:/26년/EXG팀/1. 업무/고객CS감동콘테스트/12월 3일/",
       candidates: [
         { id: 1, group: "고객가치혁신부문", name: "이길동", dept: "고객가치동작센터", topic: "고감동우수사례 1111111" },
         { id: 2, group: "고객가치혁신부문", name: "박길동", dept: "고객가치서초센터", topic: "주제2222" },
@@ -514,6 +540,35 @@
 
     let currentSortMode = "rank"; // 'rank' or 'id'
     let latestCounts = {};
+    let resolvedImages = {};
+
+    // 후보자 얼굴 사진(JPG) 사전 탐색 (파일이 있으면 TOP 3 시상대와 순위 보드에 자동 표시)
+    function preloadCandidateThumbs() {
+      const cacheBuster = "?t=" + Math.floor(Date.now() / 60000);
+      CONTEST_CONFIG.candidates.forEach((cand) => {
+        const tryPaths = [
+          `contest_media/${cand.id}.jpg` + cacheBuster,
+          `contest_media/candidate_${cand.id}.jpg` + cacheBuster,
+          `${cand.id}.jpg` + cacheBuster,
+          `candidate_${cand.id}.jpg` + cacheBuster,
+          CONTEST_CONFIG.localFolderPath + `${cand.id}.jpg`,
+          CONTEST_CONFIG.localFolderPath + `${cand.id}_${cand.name}.jpg`,
+          CONTEST_CONFIG.localFolderPath + `candidate_${cand.id}.jpg`
+        ];
+
+        function tryLoad(idx) {
+          if (idx >= tryPaths.length) return;
+          const probe = new Image();
+          probe.onload = () => {
+            resolvedImages[cand.id] = tryPaths[idx];
+            renderBoard();
+          };
+          probe.onerror = () => tryLoad(idx + 1);
+          probe.src = tryPaths[idx];
+        }
+        tryLoad(0);
+      });
+    }
 
     // 실시간 투표 데이터 불러오기 (클라우드 채널 + 로컬 백업 병합)
     async function fetchLiveVotes() {
@@ -592,9 +647,11 @@
       podiumEl.innerHTML = ranked.slice(0, 3).map((item, idx) => {
         const pct = totalVotes > 0 ? Math.round((item.votes / totalVotes) * 100) : 0;
         const metaText = [item.group, item.dept].filter(Boolean).join(" · ");
+        const thumbSrc = resolvedImages[item.id];
         return `
           <div class="podium-card rank-${idx + 1}">
             <div class="medal-icon">${medals[idx]}</div>
+            ${thumbSrc ? `<img src="${thumbSrc}" class="podium-avatar" onclick="openLightbox('${thumbSrc}')" alt="${item.name}">` : ""}
             <div class="podium-info">
               <div class="podium-rank-label">${rankLabels[idx]}</div>
               <div class="podium-name">기호 ${item.id}번 ${item.name} ${metaText ? `<span style="font-size:12px; font-weight:600; color:#60a5fa;">(${metaText})</span>` : ""}</div>
@@ -620,12 +677,14 @@
         const rankNum = ranked.findIndex((r) => r.id === item.id) + 1;
         const groupTag = item.group ? `<span class="cand-sub" style="color:#fbbf24; font-weight:700;">[${item.group}]</span>` : "";
         const deptTag = item.dept ? `<span class="cand-sub" style="color:#60a5fa; font-weight:600;">[${item.dept}]</span>` : "";
+        const thumbSrc = resolvedImages[item.id];
 
         return `
           <div class="result-row ${isLeader ? "is-leader" : ""}">
             <div class="row-top">
               <div class="row-cand">
                 <div class="rank-badge">${rankNum}위</div>
+                ${thumbSrc ? `<img src="${thumbSrc}" class="cand-thumb" onclick="openLightbox('${thumbSrc}')" alt="${item.name}">` : ""}
                 <div class="cand-title-group">
                   <span class="cand-title">기호 ${item.id}번 ${item.name}</span>
                   ${groupTag}
@@ -698,6 +757,7 @@
 
     window.addEventListener("DOMContentLoaded", () => {
       document.getElementById("contest-title").textContent = CONTEST_CONFIG.title + " 실시간 개표 현황";
+      preloadCandidateThumbs();
       fetchLiveVotes();
       setInterval(fetchLiveVotes, 3000);
     });
