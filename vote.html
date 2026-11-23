@@ -281,93 +281,56 @@
       transform: scale(1);
     }
 
-    /* 후보 이미지 영역 */
-    .cand-img-box {
-      position: relative;
-      width: 100%;
-      aspect-ratio: 4 / 3;
-      background: #0f172a;
-      overflow: hidden;
-      border-top: 1px solid rgba(255, 255, 255, 0.05);
-      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    }
-
-    .cand-img-box img {
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      display: block;
-      transition: transform 0.3s ease;
-    }
-
-    .candidate-card:hover .cand-img-box img {
-      transform: scale(1.03);
-    }
-
-    .img-placeholder {
-      width: 100%;
-      height: 100%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
-      color: #64748b;
-      padding: 12px;
-      text-align: center;
-    }
-
-    .img-placeholder .ph-icon {
-      font-size: 32px;
-      margin-bottom: 6px;
-      opacity: 0.8;
-    }
-
-    .img-placeholder .ph-text {
-      font-size: 12px;
-      color: #94a3b8;
-    }
-
-    .zoom-btn {
-      position: absolute;
-      bottom: 8px;
-      right: 8px;
-      background: rgba(15, 23, 42, 0.78);
-      color: #e2e8f0;
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      border-radius: 6px;
-      padding: 4px 8px;
-      font-size: 11px;
-      cursor: pointer;
-      backdrop-filter: blur(4px);
-      display: none;
-    }
-
-    .cand-img-box.has-image .zoom-btn {
-      display: inline-block;
-    }
-
-    /* 후보 텍스트 영역 */
+    /* 후보 텍스트 영역 (이름 / 소속 / 주제) */
     .cand-info {
-      padding: 14px;
+      padding: 6px 16px 18px;
       flex: 1;
       display: flex;
       flex-direction: column;
-      justify-content: space-between;
+      gap: 8px;
+    }
+
+    .cand-header {
+      display: flex;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 8px;
     }
 
     .cand-name {
-      font-size: 16px;
-      font-weight: 700;
+      font-size: 19px;
+      font-weight: 800;
       color: #fff;
-      margin-bottom: 4px;
+      letter-spacing: -0.3px;
       word-break: keep-all;
     }
 
-    .cand-desc {
-      font-size: 13px;
-      color: var(--text-sub);
+    .cand-dept {
+      font-size: 12px;
+      font-weight: 600;
+      color: #60a5fa;
+      background: rgba(59, 130, 246, 0.14);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 2px 9px;
+      border-radius: 6px;
       word-break: keep-all;
+    }
+
+    .cand-topic {
+      font-size: 14px;
+      color: #cbd5e1;
+      background: rgba(15, 23, 42, 0.55);
+      border-left: 3px solid #475569;
+      padding: 8px 10px;
+      border-radius: 4px 8px 8px 4px;
+      word-break: keep-all;
+      line-height: 1.45;
+    }
+
+    .candidate-card.selected .cand-topic {
+      border-left-color: var(--accent);
+      background: rgba(15, 23, 42, 0.8);
+      color: #f8fafc;
     }
 
     /* 하단 고정 투표 바 */
@@ -652,25 +615,23 @@
 
   <script>
     /* ==========================================================================
-       [1] 콘테스트 후보 및 이미지 설정 (이곳에서 이름/소속/JPG 파일명을 쉽게 수정하세요)
-       - 개별 후보 JPG: 같은 폴더(또는 media/)에 candidate_1.jpg ~ candidate_8.jpg 업로드
-       - 만약 전체 후보가 한 장에 들어있는 통이미지 JPG를 쓰신다면
-         summaryPosterJpg 경로('candidate_list.jpg')만 올리셔도 상단에 크게 자동 노출됩니다!
+       [1] 콘테스트 후보 및 안내 JPG 설정 (이곳에서 이름 / 소속 / 주제를 쉽게 수정하세요)
+       - 상단 후보 안내 JPG: D:\26년\EXG팀\1. 업무\고객CS감동콘테스트\12월 3일 폴더에 저장 후 동기화
        ========================================================================== */
     const CONTEST_CONFIG = {
       title: "CC&S 고객감동 콘테스트",
-      summaryPosterJpg: "contest_media/candidate_list.jpg", // 통이미지 JPG 파일명 (없으면 자동 숨김)
+      summaryPosterJpg: "contest_media/candidate_list.jpg", // 상단 후보 리스트 안내 JPG 파일
       localFolderPath: "file:///D:/26년/EXG팀/1. 업무/고객CS감동콘테스트/12월 3일/",
       allowMultipleVotesOnSameDevice: false,  // false: 1인 1표 제한 / true: 테스트용 무제한 허용
       candidates: [
-        { id: 1, name: "후보 1", desc: "고객감동 우수 사례 #1", img: "contest_media/candidate_1.jpg" },
-        { id: 2, name: "후보 2", desc: "고객감동 우수 사례 #2", img: "contest_media/candidate_2.jpg" },
-        { id: 3, name: "후보 3", desc: "고객감동 우수 사례 #3", img: "contest_media/candidate_3.jpg" },
-        { id: 4, name: "후보 4", desc: "고객감동 우수 사례 #4", img: "contest_media/candidate_4.jpg" },
-        { id: 5, name: "후보 5", desc: "고객감동 우수 사례 #5", img: "contest_media/candidate_5.jpg" },
-        { id: 6, name: "후보 6", desc: "고객감동 우수 사례 #6", img: "contest_media/candidate_6.jpg" },
-        { id: 7, name: "후보 7", desc: "고객감동 우수 사례 #7", img: "contest_media/candidate_7.jpg" },
-        { id: 8, name: "후보 8", desc: "고객감동 우수 사례 #8", img: "contest_media/candidate_8.jpg" }
+        { id: 1, name: "후보 1", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #1)" },
+        { id: 2, name: "후보 2", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #2)" },
+        { id: 3, name: "후보 3", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #3)" },
+        { id: 4, name: "후보 4", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #4)" },
+        { id: 5, name: "후보 5", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #5)" },
+        { id: 6, name: "후보 6", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #6)" },
+        { id: 7, name: "후보 7", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #7)" },
+        { id: 8, name: "후보 8", dept: "소속 팀/부서", topic: "발표 주제 (고객감동 우수 사례 #8)" }
       ]
     };
 
@@ -714,11 +675,10 @@
       tryNext(0);
     }
 
-    // 2. 후보 8명 카드 렌더링
+    // 2. 후보 8명 카드 렌더링 (JPG 제외, 이름 / 소속 / 주제 깔끔하게 표시)
     function renderCandidates() {
       const grid = document.getElementById("candidate-grid");
       grid.innerHTML = "";
-      const cacheBuster = "?t=" + Math.floor(Date.now() / 60000);
 
       CONTEST_CONFIG.candidates.forEach((cand) => {
         const card = document.createElement("div");
@@ -731,61 +691,17 @@
             <span class="cand-num-badge">기호 ${cand.id}번</span>
             <div class="radio-circle"></div>
           </div>
-          <div class="cand-img-box" id="img-box-${cand.id}">
-            <div class="img-placeholder" id="ph-${cand.id}">
-              <div class="ph-icon">🖼️</div>
-              <div class="ph-text">${cand.img}<br>(이미지 준비 중)</div>
-            </div>
-            <img id="img-${cand.id}" alt="${cand.name}" style="display:none;">
-            <button type="button" class="zoom-btn" id="zoom-${cand.id}">🔍 확대</button>
-          </div>
           <div class="cand-info">
-            <div class="cand-name">${cand.name}</div>
-            <div class="cand-desc">${cand.desc}</div>
+            <div class="cand-header">
+              <span class="cand-name">${cand.name}</span>
+              <span class="cand-dept">${cand.dept}</span>
+            </div>
+            <div class="cand-topic">${cand.topic}</div>
           </div>
         `;
 
         grid.appendChild(card);
-
-        // 개별 후보 JPG 이미지 로드 (루트 폴더 -> 없으면 media/ 폴더 자동 확인)
-        loadCandidateImage(cand, cacheBuster);
       });
-    }
-
-    function loadCandidateImage(cand, cacheBuster) {
-      const imgEl = document.getElementById(`img-${cand.id}`);
-      const phEl = document.getElementById(`ph-${cand.id}`);
-      const boxEl = document.getElementById(`img-box-${cand.id}`);
-      const zoomBtn = document.getElementById(`zoom-${cand.id}`);
-
-      const applyImg = (finalSrc) => {
-        imgEl.src = finalSrc;
-        imgEl.style.display = "block";
-        phEl.style.display = "none";
-        boxEl.classList.add("has-image");
-        zoomBtn.onclick = (e) => {
-          e.stopPropagation();
-          openLightbox(finalSrc);
-        };
-      };
-
-      const baseName = cand.img.split("/").pop();
-      const tryPaths = [
-        cand.img + cacheBuster,
-        baseName + cacheBuster,
-        "media/" + baseName + cacheBuster,
-        CONTEST_CONFIG.localFolderPath + baseName,
-        CONTEST_CONFIG.localFolderPath + `${cand.id}.jpg`
-      ];
-
-      function tryLoad(idx) {
-        if (idx >= tryPaths.length) return;
-        const probe = new Image();
-        probe.onload = () => applyImg(tryPaths[idx]);
-        probe.onerror = () => tryLoad(idx + 1);
-        probe.src = tryPaths[idx];
-      }
-      tryLoad(0);
     }
 
     // 3. 후보 선택 처리 (단일 선택)
