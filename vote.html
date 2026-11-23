@@ -188,6 +188,62 @@
       pointer-events: none;
     }
 
+    /* 부문 선택 구분 탭 (고객가치혁신부문 / 하이텔레서비스) */
+    .division-tabs {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 12px;
+      margin-bottom: 22px;
+      background: rgba(15, 23, 42, 0.75);
+      padding: 8px;
+      border-radius: 16px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+
+    .division-tab-btn {
+      background: transparent;
+      color: var(--text-sub);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 14px 12px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+
+    .division-tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .division-tab-btn.active.tab-g1 {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.15));
+      border-color: #3b82f6;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.28);
+    }
+
+    .division-tab-btn.active.tab-g2 {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.15));
+      border-color: #f59e0b;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.28);
+    }
+
+    .tab-sub-count {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+    }
+
     /* 후보군 그룹 섹션 타이틀 (고객가치혁신부문 5명 / 하이텔레서비스 3명) */
     .group-section-wrapper {
       margin-bottom: 28px;
@@ -664,8 +720,8 @@
       <div class="guide-box">
         <div class="guide-title">📌 투표 참여 안내</div>
         <ul class="guide-list">
-          <li>아래 후보 리스트를 확인하신 후 부문별로 가장 감동적인 사례를 선택해 주세요.</li>
-          <li>투표는 <strong>고객가치혁신부문 1표 + 하이텔레서비스 1표 (총 2표)</strong>를 각각 선택하여 제출합니다.</li>
+          <li>아래 <strong>[🌟 고객가치혁신부문]</strong> 탭과 <strong>[🏢 하이텔레서비스]</strong> 탭을 눌러 부문별로 각각 투표하실 수 있습니다.</li>
+          <li>각 부문에서 후보를 선택하고 <strong>[투표하기]</strong> 버튼을 눌러 제출해 주세요. (반복/중복 투표 가능)</li>
           <li>후보 사진을 터치(클릭)하면 크게 확대해서 보실 수 있습니다.</li>
         </ul>
       </div>
@@ -683,12 +739,24 @@
       </div>
     </section>
 
-    <!-- 3. 후보 선택 영역 (고객가치혁신부문 5명 중 1표 + 하이텔레서비스 3명 중 1표 = 총 2표) -->
+    <!-- 3. 부문 구분 탭 및 후보 선택 영역 -->
     <section>
       <div class="section-label">
-        <span>🗳️ 부문별 후보 선택 (각 부문 1명씩 총 2표)</span>
-        <span class="sub" id="vote-count-badge">고객가치혁신부문 1명 + 하이텔레서비스 1명을 각각 선택해 주세요</span>
+        <span>🗳️ 부문 선택 탭</span>
+        <span class="sub" id="vote-count-badge">탭을 눌러 각 부문별로 투표해 주세요</span>
       </div>
+
+      <div class="division-tabs">
+        <button type="button" class="division-tab-btn tab-g1 active" id="tab-btn-g1" onclick="switchVoteTab('g1')">
+          <span>🌟 고객가치혁신부문</span>
+          <span class="tab-sub-count" id="tab-cnt-g1">5명</span>
+        </button>
+        <button type="button" class="division-tab-btn tab-g2" id="tab-btn-g2" onclick="switchVoteTab('g2')">
+          <span>🏢 하이텔레서비스</span>
+          <span class="tab-sub-count" id="tab-cnt-g2">3명</span>
+        </button>
+      </div>
+
       <div id="candidate-sections-container"></div>
     </section>
   </div>
@@ -697,11 +765,11 @@
   <div class="bottom-bar">
     <div class="bottom-bar-inner">
       <div class="selection-status" id="selection-status">
-        각 부문에서 1명씩 선택해 주세요 (0 / 2 선택됨)
+        현재 탭에서 투표할 후보를 선택해 주세요
       </div>
       <div class="btn-group">
         <button type="button" class="btn-submit" id="btn-submit" disabled onclick="submitVote()">
-          2표 모두 선택해 주세요
+          후보를 선택해 주세요
         </button>
       </div>
     </div>
@@ -737,7 +805,7 @@
       title: "CC&S 고객감동 콘테스트",
       summaryPosterJpg: "contest_media/candidate_list.jpg", // 상단 후보 리스트 안내 JPG 파일
       localFolderPath: "file:///D:/26년/EXG팀/1. 업무/고객CS감동콘테스트/12월 3일/",
-      allowMultipleVotesOnSameDevice: false,  // false: 1인 1표 제한 / true: 테스트용 무제한 허용
+      allowMultipleVotesOnSameDevice: true,  // 중복 투표 무제한 허용
       candidates: [
         { id: 1, group: "고객가치혁신부문", name: "이길동", dept: "고객가치동작센터", topic: "고감동우수사례 1111111" },
         { id: 2, group: "고객가치혁신부문", name: "박길동", dept: "고객가치서초센터", topic: "주제2222" },
@@ -757,14 +825,25 @@
       topic: "ccs_contest_2026_leesengha_v1"
     };
 
-    const STORAGE_KEY_VOTED = "ccs_contest_2026_voted_pair_v2";
-    const STORAGE_KEY_RESET_ID = "ccs_contest_2026_reset_id";
-    let selectedGroup1Id = null; // 고객가치혁신부문 선택 후보 ID
-    let selectedGroup2Id = null; // 하이텔레서비스 선택 후보 ID
+    let currentVoteTab = "g1"; // 'g1': 고객가치혁신부문, 'g2': 하이텔레서비스
+    let selectedByTab = { g1: null, g2: null };
     let isSubmitting = false;
 
     function isHiteleCandidate(cand) {
       return (cand.group && cand.group.includes("하이텔레")) || (!cand.group && cand.id > 5);
+    }
+
+    function switchVoteTab(tabKey) {
+      currentVoteTab = tabKey;
+      document.getElementById("tab-btn-g1").classList.toggle("active", tabKey === "g1");
+      document.getElementById("tab-btn-g2").classList.toggle("active", tabKey === "g2");
+
+      const secG1 = document.getElementById("sec-wrap-g1");
+      const secG2 = document.getElementById("sec-wrap-g2");
+      if (secG1) secG1.style.display = tabKey === "g1" ? "block" : "none";
+      if (secG2) secG2.style.display = tabKey === "g2" ? "block" : "none";
+
+      updateSelectionStatusUI();
     }
 
     // 1. 통이미지(candidate_list.jpg) 존재 여부 체크 및 표시
@@ -801,39 +880,40 @@
       container.innerHTML = "";
       const cacheBuster = "?t=" + Math.floor(Date.now() / 60000);
 
-      // 기호 1~5번(또는 group이 고객가치혁신부문) vs 기호 6~8번(또는 group이 하이텔레서비스) 섹션 분리
-      const group1 = CONTEST_CONFIG.candidates.filter((c) =>
-        (c.group && c.group.includes("고객가치")) || (!c.group && c.id <= 5)
-      );
-      const group2 = CONTEST_CONFIG.candidates.filter((c) => !group1.includes(c));
+      const group1 = CONTEST_CONFIG.candidates.filter((c) => !isHiteleCandidate(c));
+      const group2 = CONTEST_CONFIG.candidates.filter((c) => isHiteleCandidate(c));
 
-      const sections = [];
-      if (group1.length > 0) {
-        sections.push({
-          title: group1[0].group || "고객가치혁신부문",
+      document.getElementById("tab-cnt-g1").textContent = `${group1.length}명`;
+      document.getElementById("tab-cnt-g2").textContent = `${group2.length}명`;
+
+      const sections = [
+        {
+          key: "g1",
+          title: (group1[0] && group1[0].group) || "고객가치혁신부문",
           isHitele: false,
           items: group1
-        });
-      }
-      if (group2.length > 0) {
-        sections.push({
-          title: group2[0].group || "하이텔레서비스",
+        },
+        {
+          key: "g2",
+          title: (group2[0] && group2[0].group) || "하이텔레서비스",
           isHitele: true,
           items: group2
-        });
-      }
+        }
+      ];
 
       sections.forEach((sec) => {
         const secWrap = document.createElement("div");
         secWrap.className = "group-section-wrapper";
+        secWrap.id = `sec-wrap-${sec.key}`;
+        secWrap.style.display = sec.key === currentVoteTab ? "block" : "none";
 
         const header = document.createElement("div");
         header.className = `group-section-header ${sec.isHitele ? "is-hitele" : ""}`;
         header.innerHTML = `
           <div class="group-section-title">
-            <span>${sec.isHitele ? "🏢" : "🌟"} ${sec.title} <small style="font-weight:600; opacity:0.85;">(1명 선택)</small></span>
+            <span>${sec.isHitele ? "🏢" : "🌟"} ${sec.title} 후보 리스트</span>
           </div>
-          <span class="group-section-count">후보 ${sec.items.length}명 중 1표</span>
+          <span class="group-section-count">후보 ${sec.items.length}명</span>
         `;
 
         const grid = document.createElement("div");
@@ -920,28 +1000,21 @@
       tryNext(0);
     }
 
-    // 3. 후보 선택 처리 (고객가치혁신부문 1표 + 하이텔레서비스 1표 = 총 2표)
+    // 3. 탭별 후보 선택 및 개별 투표 처리 (중복 투표 가능)
     function selectCandidate(id) {
-      const alreadyVoted = localStorage.getItem(STORAGE_KEY_VOTED);
-      if (alreadyVoted && !CONTEST_CONFIG.allowMultipleVotesOnSameDevice) {
-        showAlreadyVotedModal(alreadyVoted);
-        return;
-      }
-
       const targetCand = CONTEST_CONFIG.candidates.find((c) => c.id === id);
       if (!targetCand) return;
 
-      if (isHiteleCandidate(targetCand)) {
-        selectedGroup2Id = id;
-      } else {
-        selectedGroup1Id = id;
-      }
+      const tabKey = isHiteleCandidate(targetCand) ? "g2" : "g1";
+      selectedByTab[tabKey] = id;
 
       CONTEST_CONFIG.candidates.forEach((c) => {
-        const card = document.getElementById(`cand-card-${c.id}`);
-        if (card) {
-          const isSelected = (c.id === selectedGroup1Id || c.id === selectedGroup2Id);
-          card.classList.toggle("selected", isSelected);
+        const cTab = isHiteleCandidate(c) ? "g2" : "g1";
+        if (cTab === tabKey) {
+          const card = document.getElementById(`cand-card-${c.id}`);
+          if (card) {
+            card.classList.toggle("selected", c.id === id);
+          }
         }
       });
 
@@ -949,109 +1022,37 @@
     }
 
     function updateSelectionStatusUI() {
-      const c1 = CONTEST_CONFIG.candidates.find((c) => c.id === selectedGroup1Id);
-      const c2 = CONTEST_CONFIG.candidates.find((c) => c.id === selectedGroup2Id);
+      const activeId = selectedByTab[currentVoteTab];
+      const chosen = CONTEST_CONFIG.candidates.find((c) => c.id === activeId);
       const statusEl = document.getElementById("selection-status");
       const submitBtn = document.getElementById("btn-submit");
+      const tabTitle = currentVoteTab === "g1" ? "고객가치혁신부문" : "하이텔레서비스";
 
-      const part1 = c1 ? `고객가치: <strong>기호 ${c1.id}번 ${c1.name}</strong>` : `고객가치: 미선택`;
-      const part2 = c2 ? `하이텔레: <strong>기호 ${c2.id}번 ${c2.name}</strong>` : `하이텔레: 미선택`;
-      statusEl.innerHTML = `${part1} &nbsp;|&nbsp; ${part2}`;
-
-      if (c1 && c2) {
+      if (chosen) {
+        statusEl.innerHTML = `[${tabTitle}] 선택: <strong>기호 ${chosen.id}번 ${chosen.name}</strong>`;
         submitBtn.disabled = false;
-        submitBtn.textContent = `선택한 2명 투표하기`;
+        submitBtn.textContent = `기호 ${chosen.id}번 (${chosen.name}) 투표하기`;
       } else {
+        statusEl.innerHTML = `[${tabTitle}] 투표할 후보를 선택해 주세요`;
         submitBtn.disabled = true;
-        submitBtn.textContent = c1 || c2 ? `나머지 부문도 1명 선택해 주세요 (1/2)` : `각 부문 1명씩 선택해 주세요 (0/2)`;
+        submitBtn.textContent = `후보를 선택해 주세요`;
       }
     }
 
-    // 4. 서버의 초기화 여부 확인 (관리자가 결과 페이지에서 초기화하면 재투표 허용)
     async function syncResetState() {
-      try {
-        const res = await fetch(`https://ntfy.sh/${CLOUD_SYNC.topic}/json?poll=1&since=all`, {
-          cache: "no-store"
-        });
-        if (!res.ok) return;
-        const text = await res.text();
-        const lines = text.trim().split("\n").filter(Boolean);
-        let latestResetTime = "1";
-
-        for (const line of lines) {
-          try {
-            const evt = JSON.parse(line);
-            if (evt.event === "message" && evt.message) {
-              const payload = JSON.parse(evt.message);
-              if (payload.type === "reset") {
-                latestResetTime = String(evt.time || payload.reset_id || Date.now());
-              }
-            }
-          } catch (e) {}
-        }
-
-        const localResetId = localStorage.getItem(STORAGE_KEY_RESET_ID);
-        if (localResetId !== latestResetTime) {
-          localStorage.removeItem(STORAGE_KEY_VOTED);
-          localStorage.setItem(STORAGE_KEY_RESET_ID, latestResetTime);
-        }
-
-        const votedRaw = localStorage.getItem(STORAGE_KEY_VOTED);
-        if (votedRaw && !CONTEST_CONFIG.allowMultipleVotesOnSameDevice) {
-          lockForAlreadyVoted(votedRaw);
-        }
-      } catch (err) {
-        console.warn("실시간 상태 확인 실패(로컬 모드로 동작):", err);
-      }
+      // 중복 투표 상시 허용 모드
     }
 
-    function lockForAlreadyVoted(votedRaw) {
-      let ids = [];
-      try { ids = JSON.parse(votedRaw); } catch (e) { ids = [parseInt(votedRaw, 10)]; }
-      if (!Array.isArray(ids)) ids = [ids];
-
-      ids.forEach((vid) => {
-        const card = document.getElementById(`cand-card-${vid}`);
-        if (card) card.classList.add("selected");
-      });
-
-      const names = ids
-        .map((vid) => CONTEST_CONFIG.candidates.find((c) => c.id === Number(vid)))
-        .filter(Boolean)
-        .map((c) => `기호 ${c.id}번 ${c.name}`)
-        .join(", ");
-
-      const statusEl = document.getElementById("selection-status");
-      statusEl.innerHTML = names
-        ? `✅ 투표 완료: <strong>${names}</strong>`
-        : `✅ 이미 투표에 참여하셨습니다.`;
-
-      const submitBtn = document.getElementById("btn-submit");
-      submitBtn.disabled = true;
-      submitBtn.textContent = "투표 참여 완료";
-    }
-
-    // 5. 투표 제출 (클라우드 실시간 전송 + 로컬 백업)
+    // 5. 현재 탭의 선택 후보 즉시 투표 제출 (중복 투표 가능)
     async function submitVote() {
-      if (!selectedGroup1Id || !selectedGroup2Id || isSubmitting) return;
+      const activeId = selectedByTab[currentVoteTab];
+      if (!activeId || isSubmitting) return;
 
-      const alreadyVoted = localStorage.getItem(STORAGE_KEY_VOTED);
-      if (alreadyVoted && !CONTEST_CONFIG.allowMultipleVotesOnSameDevice) {
-        showAlreadyVotedModal(alreadyVoted);
-        return;
-      }
+      const chosen = CONTEST_CONFIG.candidates.find((c) => c.id === activeId);
+      if (!chosen) return;
 
-      const c1 = CONTEST_CONFIG.candidates.find((c) => c.id === selectedGroup1Id);
-      const c2 = CONTEST_CONFIG.candidates.find((c) => c.id === selectedGroup2Id);
-      if (!c1 || !c2) return;
-
-      const confirmMsg =
-        `아래 두 후보에게 각각 투표하시겠습니까?\n\n` +
-        `• [고객가치혁신부문] 기호 ${c1.id}번 ${c1.name}\n` +
-        `• [하이텔레서비스] 기호 ${c2.id}번 ${c2.name}\n\n` +
-        `(제출 후에는 수정할 수 없습니다)`;
-
-      if (!confirm(confirmMsg)) {
+      const tabTitle = currentVoteTab === "g1" ? "고객가치혁신부문" : "하이텔레서비스";
+      if (!confirm(`[${tabTitle}]\n기호 ${chosen.id}번 ${chosen.name} 후보에게 투표하시겠습니까?`)) {
         return;
       }
 
@@ -1062,13 +1063,13 @@
 
       const votePayload = {
         type: "vote",
-        candidateIds: [c1.id, c2.id],
+        candidateId: chosen.id,
+        candidateName: chosen.name,
         timestamp: new Date().toISOString()
       };
 
       // 로컬 스토리지에도 즉시 반영 (오프라인/동일 PC 테스트 지원)
-      saveLocalVote(c1.id);
-      saveLocalVote(c2.id);
+      saveLocalVote(chosen.id);
 
       try {
         await fetch(`https://ntfy.sh/${CLOUD_SYNC.topic}`, {
@@ -1079,16 +1080,18 @@
         console.warn("클라우드 전송 실패, 로컬 저장으로 대체:", err);
       }
 
-      const savedPair = JSON.stringify([c1.id, c2.id]);
-      localStorage.setItem(STORAGE_KEY_VOTED, savedPair);
-      lockForAlreadyVoted(savedPair);
+      // 투표 완료 후 선택 초기화 (언제든 추가/중복 투표 가능하도록)
+      selectedByTab[currentVoteTab] = null;
+      const card = document.getElementById(`cand-card-${chosen.id}`);
+      if (card) card.classList.remove("selected");
       isSubmitting = false;
+      updateSelectionStatusUI();
 
+      const otherTabName = currentVoteTab === "g1" ? "하이텔레서비스" : "고객가치혁신부문";
       document.getElementById("modal-title").textContent = "투표가 완료되었습니다! 🎉";
       document.getElementById("modal-desc").innerHTML =
-        `• 고객가치혁신부문: <strong>[기호 ${c1.id}번 ${c1.name}]</strong><br>` +
-        `• 하이텔레서비스: <strong>[기호 ${c2.id}번 ${c2.name}]</strong><br><br>` +
-        `소중한 두 표가 정상적으로 반영되었습니다.`;
+        `<strong>[${tabTitle}] 기호 ${chosen.id}번 ${chosen.name}</strong> 후보에게 소중한 한 표가 반영되었습니다.<br><br>` +
+        `<span style="font-size:13px; color:#93c5fd;">상단 탭을 눌러 [${otherTabName}] 투표 또는 추가 투표를 계속 진행하실 수 있습니다.</span>`;
       document.getElementById("done-modal").classList.add("active");
     }
 
@@ -1099,24 +1102,6 @@
         tally[candidateId] = (tally[candidateId] || 0) + 1;
         localStorage.setItem("ccs_contest_2026_local_tally", JSON.stringify(tally));
       } catch (e) {}
-    }
-
-    function showAlreadyVotedModal(votedRaw) {
-      let ids = [];
-      try { ids = JSON.parse(votedRaw); } catch (e) { ids = [parseInt(votedRaw, 10)]; }
-      if (!Array.isArray(ids)) ids = [ids];
-
-      const names = ids
-        .map((vid) => CONTEST_CONFIG.candidates.find((c) => c.id === Number(vid)))
-        .filter(Boolean)
-        .map((c) => `[기호 ${c.id}번 ${c.name}]`)
-        .join(", ");
-
-      document.getElementById("modal-title").textContent = "이미 투표에 참여하셨습니다";
-      document.getElementById("modal-desc").innerHTML = names
-        ? `이 기기에서 이미 <strong>${names}</strong> 후보에게 투표하셨습니다.`
-        : `중복 투표는 불가능합니다.`;
-      document.getElementById("done-modal").classList.add("active");
     }
 
     function closeModal() {
