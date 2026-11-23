@@ -496,15 +496,16 @@
        ========================================================================== */
     const CONTEST_CONFIG = {
       title: "CC&S 고객감동 콘테스트",
+      localFolderPath: "file:///D:/26년/EXG팀/1. 업무/고객CS감동콘테스트/12월 3일/",
       candidates: [
-        { id: 1, name: "후보 1", desc: "고객감동 우수 사례 #1", img: "candidate_1.jpg" },
-        { id: 2, name: "후보 2", desc: "고객감동 우수 사례 #2", img: "candidate_2.jpg" },
-        { id: 3, name: "후보 3", desc: "고객감동 우수 사례 #3", img: "candidate_3.jpg" },
-        { id: 4, name: "후보 4", desc: "고객감동 우수 사례 #4", img: "candidate_4.jpg" },
-        { id: 5, name: "후보 5", desc: "고객감동 우수 사례 #5", img: "candidate_5.jpg" },
-        { id: 6, name: "후보 6", desc: "고객감동 우수 사례 #6", img: "candidate_6.jpg" },
-        { id: 7, name: "후보 7", desc: "고객감동 우수 사례 #7", img: "candidate_7.jpg" },
-        { id: 8, name: "후보 8", desc: "고객감동 우수 사례 #8", img: "candidate_8.jpg" }
+        { id: 1, name: "후보 1", desc: "고객감동 우수 사례 #1", img: "contest_media/candidate_1.jpg" },
+        { id: 2, name: "후보 2", desc: "고객감동 우수 사례 #2", img: "contest_media/candidate_2.jpg" },
+        { id: 3, name: "후보 3", desc: "고객감동 우수 사례 #3", img: "contest_media/candidate_3.jpg" },
+        { id: 4, name: "후보 4", desc: "고객감동 우수 사례 #4", img: "contest_media/candidate_4.jpg" },
+        { id: 5, name: "후보 5", desc: "고객감동 우수 사례 #5", img: "contest_media/candidate_5.jpg" },
+        { id: 6, name: "후보 6", desc: "고객감동 우수 사례 #6", img: "contest_media/candidate_6.jpg" },
+        { id: 7, name: "후보 7", desc: "고객감동 우수 사례 #7", img: "contest_media/candidate_7.jpg" },
+        { id: 8, name: "후보 8", desc: "고객감동 우수 사례 #8", img: "contest_media/candidate_8.jpg" }
       ]
     };
 
@@ -520,20 +521,25 @@
     function preloadCandidateThumbs() {
       const cacheBuster = "?t=" + Math.floor(Date.now() / 60000);
       CONTEST_CONFIG.candidates.forEach((cand) => {
-        const probe = new Image();
-        probe.onload = () => {
-          resolvedImages[cand.id] = cand.img + cacheBuster;
-          renderBoard();
-        };
-        probe.onerror = () => {
-          const mediaProbe = new Image();
-          mediaProbe.onload = () => {
-            resolvedImages[cand.id] = "media/" + cand.img + cacheBuster;
+        const baseName = cand.img.split("/").pop();
+        const tryPaths = [
+          cand.img + cacheBuster,
+          baseName + cacheBuster,
+          "media/" + baseName + cacheBuster,
+          CONTEST_CONFIG.localFolderPath + baseName,
+          CONTEST_CONFIG.localFolderPath + `${cand.id}.jpg`
+        ];
+        function tryLoad(idx) {
+          if (idx >= tryPaths.length) return;
+          const probe = new Image();
+          probe.onload = () => {
+            resolvedImages[cand.id] = tryPaths[idx];
             renderBoard();
           };
-          mediaProbe.src = "media/" + cand.img + cacheBuster;
-        };
-        probe.src = cand.img + cacheBuster;
+          probe.onerror = () => tryLoad(idx + 1);
+          probe.src = tryPaths[idx];
+        }
+        tryLoad(0);
       });
     }
 
