@@ -160,18 +160,69 @@
       background: rgba(239, 68, 68, 0.15);
     }
 
-    /* 상단 부문별 최우수상(1명) 하이라이트 카드 (2열) */
-    .podium-grid {
+    /* 부문 구분 탭 (고객가치혁신부문 / 하이텔레서비스) */
+    .division-tabs {
       display: grid;
       grid-template-columns: repeat(2, 1fr);
-      gap: 18px;
-      margin-bottom: 26px;
+      gap: 12px;
+      margin-bottom: 22px;
+      background: rgba(17, 24, 39, 0.85);
+      padding: 8px;
+      border-radius: 16px;
+      border: 1px solid var(--panel-border);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
     }
 
-    @media (max-width: 760px) {
-      .podium-grid {
-        grid-template-columns: 1fr;
-      }
+    .division-tab-btn {
+      background: transparent;
+      color: var(--text-sub);
+      border: 2px solid transparent;
+      border-radius: 12px;
+      padding: 14px 16px;
+      font-size: 16px;
+      font-weight: 800;
+      cursor: pointer;
+      transition: all 0.22s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+    }
+
+    .division-tab-btn:hover {
+      color: #fff;
+      background: rgba(255, 255, 255, 0.05);
+    }
+
+    .division-tab-btn.active.tab-g1 {
+      background: linear-gradient(135deg, rgba(59, 130, 246, 0.25), rgba(37, 99, 235, 0.15));
+      border-color: #3b82f6;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(59, 130, 246, 0.28);
+    }
+
+    .division-tab-btn.active.tab-g2 {
+      background: linear-gradient(135deg, rgba(245, 158, 11, 0.25), rgba(217, 119, 6, 0.15));
+      border-color: #f59e0b;
+      color: #fff;
+      box-shadow: 0 4px 16px rgba(245, 158, 11, 0.28);
+    }
+
+    .tab-sub-pill {
+      font-size: 12px;
+      font-weight: 700;
+      padding: 3px 10px;
+      border-radius: 999px;
+      background: rgba(255, 255, 255, 0.12);
+      color: #e2e8f0;
+    }
+
+    /* 상단 선택 부문 최우수상(1명) 하이라이트 카드 */
+    .podium-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 18px;
+      margin-bottom: 24px;
     }
 
     /* 부문별 보드 구분 헤더 */
@@ -557,7 +608,19 @@
       </div>
     </header>
 
-    <!-- 2. 상위 TOP 3 하이라이트 시상대 -->
+    <!-- 2. 부문 선택 구분 탭 (고객가치혁신부문 / 하이텔레서비스) -->
+    <div class="division-tabs">
+      <button type="button" class="division-tab-btn tab-g1 active" id="res-tab-g1" onclick="switchResultTab('g1')">
+        <span>🌟 고객가치혁신부문 결과</span>
+        <span class="tab-sub-pill" id="res-cnt-g1">0표</span>
+      </button>
+      <button type="button" class="division-tab-btn tab-g2" id="res-tab-g2" onclick="switchResultTab('g2')">
+        <span>🏢 하이텔레서비스 결과</span>
+        <span class="tab-sub-pill" id="res-cnt-g2">0표</span>
+      </button>
+    </div>
+
+    <!-- 3. 현재 선택된 부문의 최우수상 하이라이트 시상대 -->
     <section class="podium-grid" id="podium-grid"></section>
 
     <!-- 3. 전체 후보 득표 현황 막대그래프 -->
@@ -604,8 +667,16 @@
     };
 
     let currentSortMode = "rank"; // 'rank' or 'id'
+    let currentResultTab = "g1";  // 'g1': 고객가치혁신부문, 'g2': 하이텔레서비스
     let latestCounts = {};
     let resolvedImages = {};
+
+    function switchResultTab(tabKey) {
+      currentResultTab = tabKey;
+      document.getElementById("res-tab-g1").classList.toggle("active", tabKey === "g1");
+      document.getElementById("res-tab-g2").classList.toggle("active", tabKey === "g2");
+      renderBoard();
+    }
 
     // 후보자 얼굴 사진(JPG) 사전 탐색 (파일이 있으면 TOP 3 시상대와 순위 보드에 자동 표시)
     function preloadCandidateThumbs() {
@@ -698,106 +769,109 @@
       return (cand.group && cand.group.includes("하이텔레")) || (!cand.group && cand.id > 5);
     }
 
-    // 화면 렌더링 (상단 부문별 최우수상 1명씩 + 하단 부문별 최우수상 1명 / 나머지 우수상 보드)
+    // 화면 렌더링 (선택된 부문 탭의 최우수상 1명 + 나머지 우수상 결과 페이지 구현)
     function renderBoard() {
       const list = CONTEST_CONFIG.candidates.map((c) => ({
         ...c,
         votes: latestCounts[c.id] || 0
       }));
 
-      const totalVotes = list.reduce((sum, item) => sum + item.votes, 0);
-      document.getElementById("total-votes-num").textContent = `${totalVotes}표`;
-
       const group1 = list.filter((c) => !isHiteleCandidate(c));
       const group2 = list.filter((c) => isHiteleCandidate(c));
 
-      const sections = [
-        { title: (group1[0] && group1[0].group) || "고객가치혁신부문", isHitele: false, items: group1 },
-        { title: (group2[0] && group2[0].group) || "하이텔레서비스", isHitele: true, items: group2 }
-      ].filter((s) => s.items.length > 0);
+      const g1Votes = group1.reduce((s, i) => s + i.votes, 0);
+      const g2Votes = group2.reduce((s, i) => s + i.votes, 0);
+      const totalVotes = g1Votes + g2Votes;
 
-      // 1) 상단 부문별 최우수상(1위) 하이라이트 카드 렌더링
+      document.getElementById("total-votes-num").textContent = `${totalVotes}표`;
+      const cntG1El = document.getElementById("res-cnt-g1");
+      const cntG2El = document.getElementById("res-cnt-g2");
+      if (cntG1El) cntG1El.textContent = `${g1Votes}표`;
+      if (cntG2El) cntG2El.textContent = `${g2Votes}표`;
+
+      const activeItems = currentResultTab === "g1" ? group1 : group2;
+      const activeTitle = currentResultTab === "g1"
+        ? ((group1[0] && group1[0].group) || "고객가치혁신부문")
+        : ((group2[0] && group2[0].group) || "하이텔레서비스");
+      const isHitele = currentResultTab === "g2";
+
+      if (activeItems.length === 0) return;
+
+      const rankedGroup = [...activeItems].sort((a, b) => b.votes - a.votes || a.id - b.id);
+      const topCand = rankedGroup[0];
+      const groupVotes = activeItems.reduce((s, i) => s + i.votes, 0);
+      const topPct = groupVotes > 0 ? Math.round((topCand.votes / groupVotes) * 100) : 0;
+      const topThumb = resolvedImages[topCand.id];
+      const metaText = [topCand.group, topCand.dept].filter(Boolean).join(" · ");
+
+      // 1) 상단 현재 탭 최우수상(1위) 하이라이트 카드
       const podiumEl = document.getElementById("podium-grid");
-      podiumEl.innerHTML = sections.map((sec) => {
-        const rankedGroup = [...sec.items].sort((a, b) => b.votes - a.votes || a.id - b.id);
-        const topCand = rankedGroup[0];
-        const groupVotes = sec.items.reduce((s, i) => s + i.votes, 0);
-        const pct = groupVotes > 0 ? Math.round((topCand.votes / groupVotes) * 100) : 0;
-        const thumbSrc = resolvedImages[topCand.id];
-        const metaText = [topCand.group, topCand.dept].filter(Boolean).join(" · ");
+      podiumEl.innerHTML = `
+        <div class="podium-card rank-1">
+          <div class="medal-icon">👑</div>
+          ${topThumb ? `<img src="${topThumb}" class="podium-avatar" onclick="openLightbox('${topThumb}')" alt="${topCand.name}">` : ""}
+          <div class="podium-info">
+            <div class="podium-rank-label">🏆 [${activeTitle}] 최우수상 (현재 1위)</div>
+            <div class="podium-name">기호 ${topCand.id}번 ${topCand.name} ${metaText ? `<span style="font-size:12px; font-weight:600; color:#60a5fa;">(${metaText})</span>` : ""}</div>
+            <div class="podium-desc">${topCand.topic}</div>
+          </div>
+          <div class="podium-score">
+            <span class="cnt">${topCand.votes}표</span>
+            <span class="pct">부문 내 ${topPct}%</span>
+          </div>
+        </div>
+      `;
+
+      // 2) 하단 현재 탭 전체 리스트 (최우수상 1명 + 나머지 우수상)
+      const grandWinnerId = topCand.id;
+      const displayItems = currentSortMode === "rank"
+        ? rankedGroup
+        : [...activeItems].sort((a, b) => a.id - b.id);
+
+      const rowsHtml = displayItems.map((item) => {
+        const pct = groupVotes > 0 ? Math.round((item.votes / groupVotes) * 1000) / 10 : 0;
+        const isGrandWinner = (item.id === grandWinnerId);
+        const awardBadgeHtml = isGrandWinner
+          ? `<span class="award-badge grand">👑 최우수상</span>`
+          : `<span class="award-badge excellence">🏅 우수상</span>`;
+
+        const deptTag = item.dept ? `<span class="cand-sub" style="color:#60a5fa; font-weight:600;">[${item.dept}]</span>` : "";
+        const thumbSrc = resolvedImages[item.id];
 
         return `
-          <div class="podium-card rank-1">
-            <div class="medal-icon">👑</div>
-            ${thumbSrc ? `<img src="${thumbSrc}" class="podium-avatar" onclick="openLightbox('${thumbSrc}')" alt="${topCand.name}">` : ""}
-            <div class="podium-info">
-              <div class="podium-rank-label">🏆 [${sec.title}] 최우수상 (1위)</div>
-              <div class="podium-name">기호 ${topCand.id}번 ${topCand.name} ${metaText ? `<span style="font-size:12px; font-weight:600; color:#60a5fa;">(${metaText})</span>` : ""}</div>
-              <div class="podium-desc">${topCand.topic}</div>
+          <div class="result-row ${isGrandWinner ? "is-leader" : ""}">
+            <div class="row-top">
+              <div class="row-cand">
+                ${awardBadgeHtml}
+                ${thumbSrc ? `<img src="${thumbSrc}" class="cand-thumb" onclick="openLightbox('${thumbSrc}')" alt="${item.name}">` : ""}
+                <div class="cand-title-group">
+                  <span class="cand-title">기호 ${item.id}번 ${item.name}</span>
+                  ${deptTag}
+                  <span class="cand-sub">${item.topic}</span>
+                </div>
+              </div>
+              <div class="row-numbers">
+                <span class="vote-count">${item.votes}표</span>
+                <span class="vote-percent">(${pct}%)</span>
+              </div>
             </div>
-            <div class="podium-score">
-              <span class="cnt">${topCand.votes}표</span>
-              <span class="pct">부문 내 ${pct}%</span>
+            <div class="bar-track">
+              <div class="bar-fill" style="width: ${pct}%;"></div>
             </div>
           </div>
         `;
       }).join("");
 
-      // 2) 부문별 전체 리스트 (최우수상 1명 + 나머지 우수상) 렌더링
       const boardEl = document.getElementById("result-list");
-      boardEl.innerHTML = sections.map((sec) => {
-        const rankedGroup = [...sec.items].sort((a, b) => b.votes - a.votes || a.id - b.id);
-        const grandWinnerId = rankedGroup[0].id; // 각 부문 1위 1명이 최우수상, 나머지는 우수상
-        const groupVotes = sec.items.reduce((s, i) => s + i.votes, 0);
-
-        const displayItems = currentSortMode === "rank"
-          ? rankedGroup
-          : [...sec.items].sort((a, b) => a.id - b.id);
-
-        const rowsHtml = displayItems.map((item) => {
-          const pct = groupVotes > 0 ? Math.round((item.votes / groupVotes) * 1000) / 10 : 0;
-          const isGrandWinner = (item.id === grandWinnerId);
-          const awardBadgeHtml = isGrandWinner
-            ? `<span class="award-badge grand">👑 최우수상</span>`
-            : `<span class="award-badge excellence">🏅 우수상</span>`;
-
-          const deptTag = item.dept ? `<span class="cand-sub" style="color:#60a5fa; font-weight:600;">[${item.dept}]</span>` : "";
-          const thumbSrc = resolvedImages[item.id];
-
-          return `
-            <div class="result-row ${isGrandWinner ? "is-leader" : ""}">
-              <div class="row-top">
-                <div class="row-cand">
-                  ${awardBadgeHtml}
-                  ${thumbSrc ? `<img src="${thumbSrc}" class="cand-thumb" onclick="openLightbox('${thumbSrc}')" alt="${item.name}">` : ""}
-                  <div class="cand-title-group">
-                    <span class="cand-title">기호 ${item.id}번 ${item.name}</span>
-                    ${deptTag}
-                    <span class="cand-sub">${item.topic}</span>
-                  </div>
-                </div>
-                <div class="row-numbers">
-                  <span class="vote-count">${item.votes}표</span>
-                  <span class="vote-percent">(${pct}%)</span>
-                </div>
-              </div>
-              <div class="bar-track">
-                <div class="bar-fill" style="width: ${pct}%;"></div>
-              </div>
-            </div>
-          `;
-        }).join("");
-
-        return `
-          <div class="group-board-section">
-            <div class="group-board-header ${sec.isHitele ? "is-hitele" : ""}">
-              <span class="group-board-title">${sec.isHitele ? "🏢" : "🌟"} ${sec.title} 개표 결과 (총 ${groupVotes}표)</span>
-              <span class="group-board-sub">최우수상 1명 · 우수상 ${sec.items.length - 1}명</span>
-            </div>
-            <div class="result-list">${rowsHtml}</div>
+      boardEl.innerHTML = `
+        <div class="group-board-section">
+          <div class="group-board-header ${isHitele ? "is-hitele" : ""}">
+            <span class="group-board-title">${isHitele ? "🏢" : "🌟"} ${activeTitle} 개표 결과 (부문 총 ${groupVotes}표)</span>
+            <span class="group-board-sub">최우수상 1명 · 우수상 ${activeItems.length - 1}명</span>
           </div>
-        `;
-      }).join("");
+          <div class="result-list">${rowsHtml}</div>
+        </div>
+      `;
     }
 
     function setSortMode(mode) {
