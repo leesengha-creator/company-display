@@ -316,19 +316,30 @@
 
     /* 카드 상단 번호 및 체크 아이콘 */
     .card-top-bar {
-      padding: 12px 14px 8px;
+      padding: 10px 12px 6px;
       display: flex;
       justify-content: space-between;
       align-items: center;
+      gap: 4px;
+    }
+
+    .card-top-bar > div:first-child {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      min-width: 0;
+      flex-wrap: nowrap;
     }
 
     .cand-num-badge {
       background: rgba(255, 255, 255, 0.08);
       color: #cbd5e1;
-      font-size: 12px;
+      font-size: 11px;
       font-weight: 700;
-      padding: 4px 10px;
-      border-radius: 8px;
+      padding: 3px 8px;
+      border-radius: 7px;
+      white-space: nowrap;
+      flex-shrink: 0;
     }
 
     .candidate-card.selected .cand-num-badge {
@@ -337,14 +348,15 @@
     }
 
     .radio-circle {
-      width: 22px;
-      height: 22px;
+      width: 20px;
+      height: 20px;
       border-radius: 50%;
       border: 2px solid #64748b;
       display: flex;
       align-items: center;
       justify-content: center;
       transition: all 0.2s ease;
+      flex-shrink: 0;
     }
 
     .candidate-card.selected .radio-circle {
@@ -385,14 +397,15 @@
     }
 
     .cand-group-badge {
-      font-size: 11px;
+      font-size: 9px;
       font-weight: 700;
-      padding: 3px 9px;
+      padding: 2px 6px;
       border-radius: 999px;
       background: rgba(245, 158, 11, 0.16);
       color: #fbbf24;
       border: 1px solid rgba(245, 158, 11, 0.35);
-      margin-left: 6px;
+      letter-spacing: -0.4px;
+      white-space: nowrap;
     }
 
     .cand-group-badge.is-sm {
