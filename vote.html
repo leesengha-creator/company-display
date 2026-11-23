@@ -856,12 +856,15 @@
           `;
 
           grid.appendChild(card);
-          loadCandidatePhoto(cand, cacheBuster);
         });
 
         secWrap.appendChild(header);
         secWrap.appendChild(grid);
         container.appendChild(secWrap);
+
+        sec.items.forEach((cand) => {
+          loadCandidatePhoto(cand, cacheBuster);
+        });
       });
     }
 
