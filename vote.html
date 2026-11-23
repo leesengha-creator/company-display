@@ -404,9 +404,9 @@
     }
 
     .radio-circle {
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
+      width: 22px;
+      height: 22px;
+      border-radius: 6px;
       border: 2px solid #64748b;
       display: flex;
       align-items: center;
@@ -421,11 +421,10 @@
     }
 
     .radio-circle::after {
-      content: "";
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: #fff;
+      content: "✓";
+      color: #fff;
+      font-size: 13px;
+      font-weight: 800;
       opacity: 0;
       transform: scale(0.5);
       transition: all 0.2s ease;
@@ -721,7 +720,7 @@
         <div class="guide-title">📌 투표 참여 안내</div>
         <ul class="guide-list">
           <li>아래 <strong>[🌟 고객가치혁신부문]</strong> 탭과 <strong>[🏢 하이텔레서비스]</strong> 탭을 눌러 부문별로 각각 투표하실 수 있습니다.</li>
-          <li>각 부문에서 후보를 선택하고 <strong>[투표하기]</strong> 버튼을 눌러 제출해 주세요. (반복/중복 투표 가능)</li>
+          <li>각 부문에서 <strong>원하는 후보를 여러 명(복수 선택)</strong> 골라 한 번에 투표하실 수 있으며, 중복 투표도 가능합니다.</li>
           <li>후보 사진을 터치(클릭)하면 크게 확대해서 보실 수 있습니다.</li>
         </ul>
       </div>
@@ -826,7 +825,7 @@
     };
 
     let currentVoteTab = "g1"; // 'g1': 고객가치혁신부문, 'g2': 하이텔레서비스
-    let selectedByTab = { g1: null, g2: null };
+    let selectedByTab = { g1: [], g2: [] }; // 각 탭별 복수 선택된 후보 ID 배열
     let isSubmitting = false;
 
     function isHiteleCandidate(cand) {
@@ -1000,59 +999,69 @@
       tryNext(0);
     }
 
-    // 3. 탭별 후보 선택 및 개별 투표 처리 (중복 투표 가능)
+    // 3. 탭별 후보 복수 선택(토글) 및 투표 처리 (복수 선택 + 중복 투표 가능)
     function selectCandidate(id) {
       const targetCand = CONTEST_CONFIG.candidates.find((c) => c.id === id);
       if (!targetCand) return;
 
       const tabKey = isHiteleCandidate(targetCand) ? "g2" : "g1";
-      selectedByTab[tabKey] = id;
+      const list = selectedByTab[tabKey];
+      const idx = list.indexOf(id);
 
-      CONTEST_CONFIG.candidates.forEach((c) => {
-        const cTab = isHiteleCandidate(c) ? "g2" : "g1";
-        if (cTab === tabKey) {
-          const card = document.getElementById(`cand-card-${c.id}`);
-          if (card) {
-            card.classList.toggle("selected", c.id === id);
-          }
-        }
-      });
+      if (idx >= 0) {
+        list.splice(idx, 1); // 이미 선택된 후보를 다시 누르면 선택 해제
+      } else {
+        list.push(id);       // 새로 선택 추가 (복수 선택)
+      }
+      list.sort((a, b) => a - b);
+
+      const card = document.getElementById(`cand-card-${id}`);
+      if (card) {
+        card.classList.toggle("selected", list.includes(id));
+      }
 
       updateSelectionStatusUI();
     }
 
     function updateSelectionStatusUI() {
-      const activeId = selectedByTab[currentVoteTab];
-      const chosen = CONTEST_CONFIG.candidates.find((c) => c.id === activeId);
+      const activeIds = selectedByTab[currentVoteTab] || [];
+      const chosenList = activeIds
+        .map((id) => CONTEST_CONFIG.candidates.find((c) => c.id === id))
+        .filter(Boolean);
+
       const statusEl = document.getElementById("selection-status");
       const submitBtn = document.getElementById("btn-submit");
       const tabTitle = currentVoteTab === "g1" ? "고객가치혁신부문" : "하이텔레서비스";
 
-      if (chosen) {
-        statusEl.innerHTML = `[${tabTitle}] 선택: <strong>기호 ${chosen.id}번 ${chosen.name}</strong>`;
+      if (chosenList.length > 0) {
+        const namesStr = chosenList.map((c) => `기호 ${c.id}번 ${c.name}`).join(", ");
+        statusEl.innerHTML = `[${tabTitle}] <strong>${chosenList.length}명 선택됨</strong>: ${namesStr}`;
         submitBtn.disabled = false;
-        submitBtn.textContent = `기호 ${chosen.id}번 (${chosen.name}) 투표하기`;
+        submitBtn.textContent = `선택한 ${chosenList.length}명 투표하기`;
       } else {
-        statusEl.innerHTML = `[${tabTitle}] 투표할 후보를 선택해 주세요`;
+        statusEl.innerHTML = `[${tabTitle}] 투표할 후보를 선택해 주세요 (복수 선택 가능)`;
         submitBtn.disabled = true;
         submitBtn.textContent = `후보를 선택해 주세요`;
       }
     }
 
     async function syncResetState() {
-      // 중복 투표 상시 허용 모드
+      // 복수 투표 및 중복 투표 상시 허용 모드
     }
 
-    // 5. 현재 탭의 선택 후보 즉시 투표 제출 (중복 투표 가능)
+    // 5. 현재 탭에서 복수 선택한 후보들 즉시 투표 제출
     async function submitVote() {
-      const activeId = selectedByTab[currentVoteTab];
-      if (!activeId || isSubmitting) return;
+      const activeIds = selectedByTab[currentVoteTab] || [];
+      if (activeIds.length === 0 || isSubmitting) return;
 
-      const chosen = CONTEST_CONFIG.candidates.find((c) => c.id === activeId);
-      if (!chosen) return;
+      const chosenList = activeIds
+        .map((id) => CONTEST_CONFIG.candidates.find((c) => c.id === id))
+        .filter(Boolean);
+      if (chosenList.length === 0) return;
 
       const tabTitle = currentVoteTab === "g1" ? "고객가치혁신부문" : "하이텔레서비스";
-      if (!confirm(`[${tabTitle}]\n기호 ${chosen.id}번 ${chosen.name} 후보에게 투표하시겠습니까?`)) {
+      const confirmLines = chosenList.map((c) => `• 기호 ${c.id}번 ${c.name}`).join("\n");
+      if (!confirm(`[${tabTitle}] 아래 선택한 ${chosenList.length}명의 후보에게 투표하시겠습니까?\n\n${confirmLines}`)) {
         return;
       }
 
@@ -1063,13 +1072,12 @@
 
       const votePayload = {
         type: "vote",
-        candidateId: chosen.id,
-        candidateName: chosen.name,
+        candidateIds: chosenList.map((c) => c.id),
         timestamp: new Date().toISOString()
       };
 
       // 로컬 스토리지에도 즉시 반영 (오프라인/동일 PC 테스트 지원)
-      saveLocalVote(chosen.id);
+      chosenList.forEach((c) => saveLocalVote(c.id));
 
       try {
         await fetch(`https://ntfy.sh/${CLOUD_SYNC.topic}`, {
@@ -1080,17 +1088,21 @@
         console.warn("클라우드 전송 실패, 로컬 저장으로 대체:", err);
       }
 
-      // 투표 완료 후 선택 초기화 (언제든 추가/중복 투표 가능하도록)
-      selectedByTab[currentVoteTab] = null;
-      const card = document.getElementById(`cand-card-${chosen.id}`);
-      if (card) card.classList.remove("selected");
+      // 투표 완료 후 현재 탭 선택 초기화 (언제든 추가/중복 투표 가능하도록)
+      chosenList.forEach((c) => {
+        const card = document.getElementById(`cand-card-${c.id}`);
+        if (card) card.classList.remove("selected");
+      });
+      selectedByTab[currentVoteTab] = [];
       isSubmitting = false;
       updateSelectionStatusUI();
 
       const otherTabName = currentVoteTab === "g1" ? "하이텔레서비스" : "고객가치혁신부문";
+      const modalNamesHtml = chosenList.map((c) => `• <strong>기호 ${c.id}번 ${c.name}</strong>`).join("<br>");
       document.getElementById("modal-title").textContent = "투표가 완료되었습니다! 🎉";
       document.getElementById("modal-desc").innerHTML =
-        `<strong>[${tabTitle}] 기호 ${chosen.id}번 ${chosen.name}</strong> 후보에게 소중한 한 표가 반영되었습니다.<br><br>` +
+        `[${tabTitle}] 선택한 ${chosenList.length}명의 후보에게 투표가 반영되었습니다.<br><br>` +
+        `${modalNamesHtml}<br><br>` +
         `<span style="font-size:13px; color:#93c5fd;">상단 탭을 눌러 [${otherTabName}] 투표 또는 추가 투표를 계속 진행하실 수 있습니다.</span>`;
       document.getElementById("done-modal").classList.add("active");
     }
