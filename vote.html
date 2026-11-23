@@ -1,0 +1,944 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0">
+  <title>CC&S 고객감동 콘테스트 - 투표하기</title>
+  <style>
+    :root {
+      --bg-dark: #0b0f19;
+      --card-bg: #151c2c;
+      --card-border: rgba(255, 255, 255, 0.1);
+      --accent: #3b82f6;
+      --accent-glow: rgba(59, 130, 246, 0.45);
+      --gold: #f59e0b;
+      --text-main: #f8fafc;
+      --text-sub: #94a3b8;
+      --success: #10b981;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--bg-dark);
+      background-image: 
+        radial-gradient(circle at 15% 15%, rgba(59, 130, 246, 0.15) 0%, transparent 40%),
+        radial-gradient(circle at 85% 80%, rgba(245, 158, 11, 0.1) 0%, transparent 40%);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Malgun Gothic", sans-serif;
+      min-height: 100vh;
+      padding-bottom: 120px;
+      line-height: 1.5;
+    }
+
+    .container {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: 24px 18px;
+    }
+
+    /* 상단 헤더 & 안내 영역 */
+    .header-card {
+      background: linear-gradient(145deg, rgba(30, 41, 59, 0.85), rgba(15, 23, 42, 0.92));
+      border: 1px solid var(--card-border);
+      border-radius: 20px;
+      padding: 28px 24px;
+      text-align: center;
+      margin-bottom: 24px;
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.35);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .header-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      background: rgba(245, 158, 11, 0.15);
+      color: #fbbf24;
+      border: 1px solid rgba(245, 158, 11, 0.35);
+      padding: 5px 14px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 700;
+      margin-bottom: 12px;
+      letter-spacing: 0.3px;
+    }
+
+    .header-title {
+      font-size: clamp(24px, 5vw, 34px);
+      font-weight: 800;
+      letter-spacing: -0.5px;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #ffffff, #cbd5e1);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .header-desc {
+      color: var(--text-sub);
+      font-size: 15px;
+      max-width: 640px;
+      margin: 0 auto 20px;
+      word-break: keep-all;
+    }
+
+    .guide-box {
+      background: rgba(15, 23, 42, 0.7);
+      border: 1px solid rgba(59, 130, 246, 0.25);
+      border-radius: 14px;
+      padding: 16px 20px;
+      text-align: left;
+      display: inline-block;
+      width: 100%;
+      max-width: 680px;
+    }
+
+    .guide-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #60a5fa;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .guide-list {
+      list-style: none;
+      font-size: 14px;
+      color: #e2e8f0;
+      display: grid;
+      gap: 6px;
+    }
+
+    .guide-list li {
+      position: relative;
+      padding-left: 16px;
+      word-break: keep-all;
+    }
+
+    .guide-list li::before {
+      content: "•";
+      position: absolute;
+      left: 2px;
+      color: var(--accent);
+      font-weight: bold;
+    }
+
+    /* 전체 후보 한눈에 보기 (통이미지 JPG 영역) */
+    .summary-poster-section {
+      margin-bottom: 28px;
+      display: none;
+    }
+
+    .summary-poster-section.visible {
+      display: block;
+    }
+
+    .section-label {
+      font-size: 18px;
+      font-weight: 700;
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .section-label span.sub {
+      font-size: 13px;
+      color: var(--text-sub);
+      font-weight: 400;
+    }
+
+    .poster-wrapper {
+      background: var(--card-bg);
+      border: 1px solid var(--card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+      cursor: zoom-in;
+      position: relative;
+    }
+
+    .poster-wrapper img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    .zoom-hint {
+      position: absolute;
+      bottom: 12px;
+      right: 12px;
+      background: rgba(0, 0, 0, 0.72);
+      color: #fff;
+      font-size: 12px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      backdrop-filter: blur(4px);
+      pointer-events: none;
+    }
+
+    /* 후보자 그리드 */
+    .candidate-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
+      gap: 16px;
+    }
+
+    @media (max-width: 520px) {
+      .candidate-grid {
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+    }
+
+    .candidate-card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 16px;
+      overflow: hidden;
+      cursor: pointer;
+      transition: all 0.22s cubic-bezier(0.25, 1, 0.5, 1);
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25);
+    }
+
+    .candidate-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(255, 255, 255, 0.28);
+    }
+
+    .candidate-card.selected {
+      border-color: var(--accent);
+      background: linear-gradient(180deg, rgba(59, 130, 246, 0.14), rgba(21, 28, 44, 0.95));
+      box-shadow: 0 0 0 3px var(--accent-glow), 0 10px 25px rgba(0, 0, 0, 0.4);
+      transform: translateY(-3px);
+    }
+
+    /* 카드 상단 번호 및 체크 아이콘 */
+    .card-top-bar {
+      padding: 12px 14px 8px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .cand-num-badge {
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      font-size: 12px;
+      font-weight: 700;
+      padding: 4px 10px;
+      border-radius: 8px;
+    }
+
+    .candidate-card.selected .cand-num-badge {
+      background: var(--accent);
+      color: #fff;
+    }
+
+    .radio-circle {
+      width: 22px;
+      height: 22px;
+      border-radius: 50%;
+      border: 2px solid #64748b;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.2s ease;
+    }
+
+    .candidate-card.selected .radio-circle {
+      border-color: var(--accent);
+      background: var(--accent);
+    }
+
+    .radio-circle::after {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #fff;
+      opacity: 0;
+      transform: scale(0.5);
+      transition: all 0.2s ease;
+    }
+
+    .candidate-card.selected .radio-circle::after {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    /* 후보 이미지 영역 */
+    .cand-img-box {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 4 / 3;
+      background: #0f172a;
+      overflow: hidden;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .cand-img-box img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+      transition: transform 0.3s ease;
+    }
+
+    .candidate-card:hover .cand-img-box img {
+      transform: scale(1.03);
+    }
+
+    .img-placeholder {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+      color: #64748b;
+      padding: 12px;
+      text-align: center;
+    }
+
+    .img-placeholder .ph-icon {
+      font-size: 32px;
+      margin-bottom: 6px;
+      opacity: 0.8;
+    }
+
+    .img-placeholder .ph-text {
+      font-size: 12px;
+      color: #94a3b8;
+    }
+
+    .zoom-btn {
+      position: absolute;
+      bottom: 8px;
+      right: 8px;
+      background: rgba(15, 23, 42, 0.78);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      padding: 4px 8px;
+      font-size: 11px;
+      cursor: pointer;
+      backdrop-filter: blur(4px);
+      display: none;
+    }
+
+    .cand-img-box.has-image .zoom-btn {
+      display: inline-block;
+    }
+
+    /* 후보 텍스트 영역 */
+    .cand-info {
+      padding: 14px;
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: space-between;
+    }
+
+    .cand-name {
+      font-size: 16px;
+      font-weight: 700;
+      color: #fff;
+      margin-bottom: 4px;
+      word-break: keep-all;
+    }
+
+    .cand-desc {
+      font-size: 13px;
+      color: var(--text-sub);
+      word-break: keep-all;
+    }
+
+    /* 하단 고정 투표 바 */
+    .bottom-bar {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      background: rgba(15, 23, 42, 0.92);
+      backdrop-filter: blur(12px);
+      border-top: 1px solid rgba(255, 255, 255, 0.12);
+      padding: 14px 18px;
+      z-index: 100;
+      box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.4);
+    }
+
+    .bottom-bar-inner {
+      max-width: 960px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .selection-status {
+      font-size: 14px;
+      color: #cbd5e1;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .selection-status strong {
+      color: #60a5fa;
+      font-weight: 700;
+    }
+
+    .btn-group {
+      display: flex;
+      gap: 10px;
+      flex-shrink: 0;
+    }
+
+    .btn-results-link {
+      background: rgba(255, 255, 255, 0.08);
+      color: #e2e8f0;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      padding: 12px 16px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 600;
+      text-decoration: none;
+      transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-results-link:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+
+    .btn-submit {
+      background: linear-gradient(135deg, #2563eb, #1d4ed8);
+      color: #ffffff;
+      border: none;
+      padding: 12px 26px;
+      border-radius: 12px;
+      font-size: 15px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: 0 4px 14px rgba(37, 99, 235, 0.4);
+    }
+
+    .btn-submit:disabled {
+      background: #334155;
+      color: #64748b;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
+
+    .btn-submit:not(:disabled):hover {
+      transform: translateY(-1px);
+      box-shadow: 0 6px 20px rgba(37, 99, 235, 0.55);
+    }
+
+    /* 완료 모달 & 이미지 확대 모달 */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.78);
+      backdrop-filter: blur(6px);
+      z-index: 200;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal-backdrop.active {
+      display: flex;
+    }
+
+    .modal-box {
+      background: #1e293b;
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 20px;
+      padding: 28px 24px;
+      max-width: 400px;
+      width: 100%;
+      text-align: center;
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+      animation: popIn 0.25s cubic-bezier(0.25, 1, 0.5, 1);
+    }
+
+    @keyframes popIn {
+      from { opacity: 0; transform: scale(0.92); }
+      to { opacity: 1; transform: scale(1); }
+    }
+
+    .modal-icon {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(16, 185, 129, 0.15);
+      color: #34d399;
+      font-size: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 16px;
+    }
+
+    .modal-title {
+      font-size: 20px;
+      font-weight: 800;
+      margin-bottom: 8px;
+    }
+
+    .modal-desc {
+      font-size: 14px;
+      color: var(--text-sub);
+      margin-bottom: 22px;
+      word-break: keep-all;
+    }
+
+    .modal-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .btn-primary-full {
+      background: linear-gradient(135deg, #10b981, #059669);
+      color: #fff;
+      text-decoration: none;
+      padding: 13px;
+      border-radius: 12px;
+      font-weight: 700;
+      font-size: 15px;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-secondary-full {
+      background: rgba(255, 255, 255, 0.08);
+      color: #cbd5e1;
+      padding: 11px;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 14px;
+      border: none;
+      cursor: pointer;
+    }
+
+    /* 이미지 라이트박스 */
+    .lightbox-img {
+      max-width: 95vw;
+      max-height: 88vh;
+      border-radius: 12px;
+      box-shadow: 0 12px 40px rgba(0, 0, 0, 0.6);
+      object-fit: contain;
+    }
+
+    .lightbox-close {
+      position: absolute;
+      top: 20px;
+      right: 24px;
+      background: rgba(255, 255, 255, 0.15);
+      color: #fff;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 20px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="container">
+    <!-- 1. 상단 콘테스트 안내 헤더 -->
+    <header class="header-card">
+      <div class="header-badge">🏆 CC&amp;S CUSTOMER IMPRESSION CONTEST</div>
+      <h1 class="header-title" id="contest-title">CC&amp;S 고객감동 콘테스트</h1>
+      <p class="header-desc" id="contest-subtitle">
+        고객에게 최고의 감동을 선사한 주인공을 뽑아주세요!<br>
+        여러분의 소중한 한 표가 오늘의 주인공을 결정합니다.
+      </p>
+
+      <div class="guide-box">
+        <div class="guide-title">📌 투표 참여 안내</div>
+        <ul class="guide-list">
+          <li>아래 후보 리스트(JPG 이미지 및 소개)를 확인하신 후 가장 감동적인 사례를 선택해 주세요.</li>
+          <li>투표는 <strong>1인 1표 (단일 선택)</strong>로 진행되며, 제출 후에는 수정할 수 없습니다.</li>
+          <li>후보 이미지를 터치(클릭)하면 크게 확대해서 보실 수 있습니다.</li>
+        </ul>
+      </div>
+    </header>
+
+    <!-- 2. 전체 후보 요약 이미지 (media/candidates_list.jpg 파일이 있을 경우 자동 표시) -->
+    <section class="summary-poster-section" id="poster-section">
+      <div class="section-label">
+        <span>📋 전체 후보 리스트 안내</span>
+        <span class="sub">클릭하면 원본 크기로 확대됩니다</span>
+      </div>
+      <div class="poster-wrapper" onclick="openLightbox(CONTEST_CONFIG.summaryPosterJpg)">
+        <img id="summary-poster-img" alt="전체 후보 리스트">
+        <div class="zoom-hint">🔍 터치하여 크게 보기</div>
+      </div>
+    </section>
+
+    <!-- 3. 후보 선택 영역 (8명 단일 선택) -->
+    <section>
+      <div class="section-label">
+        <span>🗳️ 후보 선택 (1인 1표)</span>
+        <span class="sub" id="vote-count-badge">실시간 투표 진행 중</span>
+      </div>
+      <div class="candidate-grid" id="candidate-grid"></div>
+    </section>
+  </div>
+
+  <!-- 4. 하단 고정 투표 제출 바 -->
+  <div class="bottom-bar">
+    <div class="bottom-bar-inner">
+      <div class="selection-status" id="selection-status">
+        투표할 후보를 선택해 주세요 (1인 1표)
+      </div>
+      <div class="btn-group">
+        <a href="result.html" class="btn-results-link">📊 실시간 결과 보기</a>
+        <button type="button" class="btn-submit" id="btn-submit" disabled onclick="submitVote()">
+          투표하기
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- 투표 완료 안내 모달 -->
+  <div class="modal-backdrop" id="done-modal">
+    <div class="modal-box">
+      <div class="modal-icon">✓</div>
+      <h2 class="modal-title" id="modal-title">투표가 완료되었습니다!</h2>
+      <p class="modal-desc" id="modal-desc">
+        소중한 한 표가 실시간 집계에 반영되었습니다.<br>
+        결과 페이지에서 실시간 순위를 확인해 보세요.
+      </p>
+      <div class="modal-actions">
+        <a href="result.html" class="btn-primary-full">📊 실시간 투표 결과 페이지로 이동</a>
+        <button type="button" class="btn-secondary-full" onclick="closeModal()">현재 페이지 유지</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- JPG 이미지 확대 라이트박스 -->
+  <div class="modal-backdrop" id="lightbox-modal" onclick="closeLightbox()">
+    <button type="button" class="lightbox-close" onclick="closeLightbox()">✕</button>
+    <img id="lightbox-img" class="lightbox-img" src="" alt="확대 이미지" onclick="event.stopPropagation()">
+  </div>
+
+  <script>
+    /* ==========================================================================
+       [1] 콘테스트 후보 및 이미지 설정 (이곳에서 이름/소속/JPG 파일명을 쉽게 수정하세요)
+       - 개별 후보 JPG: 같은 폴더(또는 media/)에 candidate_1.jpg ~ candidate_8.jpg 업로드
+       - 만약 전체 후보가 한 장에 들어있는 통이미지 JPG를 쓰신다면
+         summaryPosterJpg 경로('candidate_list.jpg')만 올리셔도 상단에 크게 자동 노출됩니다!
+       ========================================================================== */
+    const CONTEST_CONFIG = {
+      title: "CC&S 고객감동 콘테스트",
+      summaryPosterJpg: "candidate_list.jpg", // 통이미지 JPG 파일명 (없으면 자동 숨김)
+      allowMultipleVotesOnSameDevice: false,  // false: 1인 1표 제한 / true: 테스트용 무제한 허용
+      candidates: [
+        { id: 1, name: "후보 1", desc: "고객감동 우수 사례 #1", img: "candidate_1.jpg" },
+        { id: 2, name: "후보 2", desc: "고객감동 우수 사례 #2", img: "candidate_2.jpg" },
+        { id: 3, name: "후보 3", desc: "고객감동 우수 사례 #3", img: "candidate_3.jpg" },
+        { id: 4, name: "후보 4", desc: "고객감동 우수 사례 #4", img: "candidate_4.jpg" },
+        { id: 5, name: "후보 5", desc: "고객감동 우수 사례 #5", img: "candidate_5.jpg" },
+        { id: 6, name: "후보 6", desc: "고객감동 우수 사례 #6", img: "candidate_6.jpg" },
+        { id: 7, name: "후보 7", desc: "고객감동 우수 사례 #7", img: "candidate_7.jpg" },
+        { id: 8, name: "후보 8", desc: "고객감동 우수 사례 #8", img: "candidate_8.jpg" }
+      ]
+    };
+
+    /* ==========================================================================
+       [2] 실시간 투표 클라우드 연동 설정 (무인증 실시간 Pub/Sub 채널 연동)
+       ========================================================================== */
+    const CLOUD_SYNC = {
+      topic: "ccs_contest_2026_leesengha_v1"
+    };
+
+    const STORAGE_KEY_VOTED = "ccs_contest_2026_voted_candidate";
+    const STORAGE_KEY_RESET_ID = "ccs_contest_2026_reset_id";
+    let selectedCandidateId = null;
+    let isSubmitting = false;
+
+    // 1. 통이미지(candidate_list.jpg) 존재 여부 체크 및 표시
+    function checkSummaryPoster() {
+      if (!CONTEST_CONFIG.summaryPosterJpg) return;
+      const posterImg = document.getElementById("summary-poster-img");
+      const posterSection = document.getElementById("poster-section");
+      const testImg = new Image();
+      const cacheBuster = "?t=" + Math.floor(Date.now() / 60000);
+      testImg.onload = () => {
+        posterImg.src = CONTEST_CONFIG.summaryPosterJpg + cacheBuster;
+        posterSection.classList.add("visible");
+      };
+      testImg.onerror = () => {
+        // media/ 폴더 안에 넣었을 경우도 자동 탐색
+        const mediaTest = new Image();
+        mediaTest.onload = () => {
+          CONTEST_CONFIG.summaryPosterJpg = "media/" + CONTEST_CONFIG.summaryPosterJpg;
+          posterImg.src = CONTEST_CONFIG.summaryPosterJpg + cacheBuster;
+          posterSection.classList.add("visible");
+        };
+        mediaTest.src = "media/" + CONTEST_CONFIG.summaryPosterJpg + cacheBuster;
+      };
+      testImg.src = CONTEST_CONFIG.summaryPosterJpg + cacheBuster;
+    }
+
+    // 2. 후보 8명 카드 렌더링
+    function renderCandidates() {
+      const grid = document.getElementById("candidate-grid");
+      grid.innerHTML = "";
+      const cacheBuster = "?t=" + Math.floor(Date.now() / 60000);
+
+      CONTEST_CONFIG.candidates.forEach((cand) => {
+        const card = document.createElement("div");
+        card.className = "candidate-card";
+        card.id = `cand-card-${cand.id}`;
+        card.onclick = () => selectCandidate(cand.id);
+
+        card.innerHTML = `
+          <div class="card-top-bar">
+            <span class="cand-num-badge">기호 ${cand.id}번</span>
+            <div class="radio-circle"></div>
+          </div>
+          <div class="cand-img-box" id="img-box-${cand.id}">
+            <div class="img-placeholder" id="ph-${cand.id}">
+              <div class="ph-icon">🖼️</div>
+              <div class="ph-text">${cand.img}<br>(이미지 준비 중)</div>
+            </div>
+            <img id="img-${cand.id}" alt="${cand.name}" style="display:none;">
+            <button type="button" class="zoom-btn" id="zoom-${cand.id}">🔍 확대</button>
+          </div>
+          <div class="cand-info">
+            <div class="cand-name">${cand.name}</div>
+            <div class="cand-desc">${cand.desc}</div>
+          </div>
+        `;
+
+        grid.appendChild(card);
+
+        // 개별 후보 JPG 이미지 로드 (루트 폴더 -> 없으면 media/ 폴더 자동 확인)
+        loadCandidateImage(cand, cacheBuster);
+      });
+    }
+
+    function loadCandidateImage(cand, cacheBuster) {
+      const imgEl = document.getElementById(`img-${cand.id}`);
+      const phEl = document.getElementById(`ph-${cand.id}`);
+      const boxEl = document.getElementById(`img-box-${cand.id}`);
+      const zoomBtn = document.getElementById(`zoom-${cand.id}`);
+
+      const applyImg = (finalSrc) => {
+        imgEl.src = finalSrc;
+        imgEl.style.display = "block";
+        phEl.style.display = "none";
+        boxEl.classList.add("has-image");
+        zoomBtn.onclick = (e) => {
+          e.stopPropagation();
+          openLightbox(finalSrc);
+        };
+      };
+
+      const probe = new Image();
+      probe.onload = () => applyImg(cand.img + cacheBuster);
+      probe.onerror = () => {
+        const mediaProbe = new Image();
+        mediaProbe.onload = () => applyImg("media/" + cand.img + cacheBuster);
+        mediaProbe.src = "media/" + cand.img + cacheBuster;
+      };
+      probe.src = cand.img + cacheBuster;
+    }
+
+    // 3. 후보 선택 처리 (단일 선택)
+    function selectCandidate(id) {
+      const alreadyVoted = localStorage.getItem(STORAGE_KEY_VOTED);
+      if (alreadyVoted && !CONTEST_CONFIG.allowMultipleVotesOnSameDevice) {
+        showAlreadyVotedModal(parseInt(alreadyVoted, 10));
+        return;
+      }
+
+      selectedCandidateId = id;
+      CONTEST_CONFIG.candidates.forEach((c) => {
+        const card = document.getElementById(`cand-card-${c.id}`);
+        if (card) {
+          card.classList.toggle("selected", c.id === id);
+        }
+      });
+
+      const chosen = CONTEST_CONFIG.candidates.find((c) => c.id === id);
+      const statusEl = document.getElementById("selection-status");
+      statusEl.innerHTML = `선택한 후보: <strong>기호 ${chosen.id}번 ${chosen.name}</strong>`;
+
+      const submitBtn = document.getElementById("btn-submit");
+      submitBtn.disabled = false;
+      submitBtn.textContent = `기호 ${chosen.id}번 투표하기`;
+    }
+
+    // 4. 서버의 초기화 여부 확인 (관리자가 결과 페이지에서 초기화하면 재투표 허용)
+    async function syncResetState() {
+      try {
+        const res = await fetch(`https://ntfy.sh/${CLOUD_SYNC.topic}/json?poll=1&since=all`, {
+          cache: "no-store"
+        });
+        if (!res.ok) return;
+        const text = await res.text();
+        const lines = text.trim().split("\n").filter(Boolean);
+        let latestResetTime = "1";
+
+        for (const line of lines) {
+          try {
+            const evt = JSON.parse(line);
+            if (evt.event === "message" && evt.message) {
+              const payload = JSON.parse(evt.message);
+              if (payload.type === "reset") {
+                latestResetTime = String(evt.time || payload.reset_id || Date.now());
+              }
+            }
+          } catch (e) {}
+        }
+
+        const localResetId = localStorage.getItem(STORAGE_KEY_RESET_ID);
+        if (localResetId !== latestResetTime) {
+          localStorage.removeItem(STORAGE_KEY_VOTED);
+          localStorage.setItem(STORAGE_KEY_RESET_ID, latestResetTime);
+        }
+
+        const votedId = localStorage.getItem(STORAGE_KEY_VOTED);
+        if (votedId && !CONTEST_CONFIG.allowMultipleVotesOnSameDevice) {
+          lockForAlreadyVoted(parseInt(votedId, 10));
+        }
+      } catch (err) {
+        console.warn("실시간 상태 확인 실패(로컬 모드로 동작):", err);
+      }
+    }
+
+    function lockForAlreadyVoted(votedId) {
+      const chosen = CONTEST_CONFIG.candidates.find((c) => c.id === votedId);
+      const card = document.getElementById(`cand-card-${votedId}`);
+      if (card) card.classList.add("selected");
+
+      const statusEl = document.getElementById("selection-status");
+      statusEl.innerHTML = chosen
+        ? `✅ 투표 완료: <strong>기호 ${chosen.id}번 ${chosen.name}</strong>`
+        : `✅ 이미 투표에 참여하셨습니다.`;
+
+      const submitBtn = document.getElementById("btn-submit");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "투표 참여 완료";
+    }
+
+    // 5. 투표 제출 (클라우드 실시간 전송 + 로컬 백업)
+    async function submitVote() {
+      if (!selectedCandidateId || isSubmitting) return;
+
+      const alreadyVoted = localStorage.getItem(STORAGE_KEY_VOTED);
+      if (alreadyVoted && !CONTEST_CONFIG.allowMultipleVotesOnSameDevice) {
+        showAlreadyVotedModal(parseInt(alreadyVoted, 10));
+        return;
+      }
+
+      const chosen = CONTEST_CONFIG.candidates.find((c) => c.id === selectedCandidateId);
+      if (!confirm(`[기호 ${chosen.id}번 - ${chosen.name}] 후보에게 투표하시겠습니까?\n(1인 1표이며 제출 후 변경할 수 없습니다)`)) {
+        return;
+      }
+
+      isSubmitting = true;
+      const submitBtn = document.getElementById("btn-submit");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "전송 중...";
+
+      const votePayload = {
+        type: "vote",
+        candidateId: chosen.id,
+        candidateName: chosen.name,
+        timestamp: new Date().toISOString()
+      };
+
+      // 로컬 스토리지에도 즉시 반영 (오프라인/동일 PC 테스트 지원)
+      saveLocalVote(chosen.id);
+
+      try {
+        await fetch(`https://ntfy.sh/${CLOUD_SYNC.topic}`, {
+          method: "POST",
+          body: JSON.stringify(votePayload)
+        });
+      } catch (err) {
+        console.warn("클라우드 전송 실패, 로컬 저장으로 대체:", err);
+      }
+
+      localStorage.setItem(STORAGE_KEY_VOTED, String(chosen.id));
+      lockForAlreadyVoted(chosen.id);
+      isSubmitting = false;
+
+      document.getElementById("modal-title").textContent = "투표가 완료되었습니다! 🎉";
+      document.getElementById("modal-desc").innerHTML = `<strong>[기호 ${chosen.id}번 ${chosen.name}]</strong> 후보에게 소중한 한 표가 반영되었습니다.`;
+      document.getElementById("done-modal").classList.add("active");
+    }
+
+    function saveLocalVote(candidateId) {
+      try {
+        const raw = localStorage.getItem("ccs_contest_2026_local_tally");
+        const tally = raw ? JSON.parse(raw) : {};
+        tally[candidateId] = (tally[candidateId] || 0) + 1;
+        localStorage.setItem("ccs_contest_2026_local_tally", JSON.stringify(tally));
+      } catch (e) {}
+    }
+
+    function showAlreadyVotedModal(votedId) {
+      const chosen = CONTEST_CONFIG.candidates.find((c) => c.id === votedId);
+      document.getElementById("modal-title").textContent = "이미 투표에 참여하셨습니다";
+      document.getElementById("modal-desc").innerHTML = chosen
+        ? `이 기기에서 이미 <strong>[기호 ${chosen.id}번 ${chosen.name}]</strong> 후보에게 투표하셨습니다.`
+        : `1인 1표 원칙에 따라 중복 투표는 불가능합니다.`;
+      document.getElementById("done-modal").classList.add("active");
+    }
+
+    function closeModal() {
+      document.getElementById("done-modal").classList.remove("active");
+    }
+
+    function openLightbox(src) {
+      const lb = document.getElementById("lightbox-modal");
+      const img = document.getElementById("lightbox-img");
+      img.src = src;
+      lb.classList.add("active");
+    }
+
+    function closeLightbox() {
+      document.getElementById("lightbox-modal").classList.remove("active");
+    }
+
+    window.addEventListener("DOMContentLoaded", () => {
+      document.getElementById("contest-title").textContent = CONTEST_CONFIG.title;
+      checkSummaryPoster();
+      renderCandidates();
+      syncResetState();
+    });
+  </script>
+</body>
+</html>
