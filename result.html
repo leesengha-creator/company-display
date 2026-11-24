@@ -891,6 +891,8 @@
       localStorage.removeItem("ccs_contest_2026_local_tally");
       localStorage.removeItem("ccs_contest_2026_voted_candidate");
       localStorage.removeItem("ccs_contest_2026_voted_pair_v2");
+      localStorage.removeItem("ccs_contest_2026_voted_g1");
+      localStorage.removeItem("ccs_contest_2026_voted_g2");
 
       try {
         await fetch(`https://ntfy.sh/${CLOUD_SYNC.topic}`, {
